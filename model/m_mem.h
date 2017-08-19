@@ -8,6 +8,10 @@
 #ifndef M_MEM_H
 #define M_MEM_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void* mm_malloc_ex(unsigned long, char*, int);
 #define mm_malloc(sz) mm_malloc_ex((sz),__FILE__,__LINE__)
 
@@ -19,6 +23,10 @@ unsigned long mm_free_ex(void*, char*, int);
 
 int mm_has(void*);
 void mm_report(int brief_level);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

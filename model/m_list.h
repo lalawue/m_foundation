@@ -8,6 +8,10 @@
 #ifndef M_LIST_H
 #define M_LIST_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
    LST_FIRST,
    LST_LAST,
@@ -61,5 +65,9 @@ void* lst_iter_data(lst_iter_t*);
 
 #define lst_foreach_r(it, lst)                                          \
    for (lst_iter_t _##it, *it=lst_iter_init(lst, &_##it, LST_LAST); (it=lst_iter_next(it));)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

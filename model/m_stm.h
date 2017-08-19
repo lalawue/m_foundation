@@ -8,6 +8,10 @@
 #ifndef M_STM_H
 #define M_STM_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct s_stm stm_t;
 typedef void(*stm_finalizer)(void *ptr, void *ud);
 
@@ -27,5 +31,9 @@ void* stm_popf(stm_t*);
 void* stm_popl(stm_t*);
 
 int stm_total(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

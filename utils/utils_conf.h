@@ -5,20 +5,22 @@
  * under the terms of the MIT license. See LICENSE for details.
  */
 
-#ifndef PLAT_TIME_H
-#define PLAT_TIME_H
+#ifndef UTILS_CONF_H
+#define UTILS_CONF_H
+
+#include "m_list.h"
+#include "utils_str.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdint.h>
+typedef struct s_conf conf_t;
 
-#define MTIME_MICRO_PER_SEC 1000000
-#define MTIME_MILLI_PER_SEC 1000
+conf_t* utils_conf_open(const char *conf_file);
+void utils_conf_close(conf_t*);
 
-int64_t mtime_current(void);    /* in micro sec */
-void mtime_sleep(int millisecond);
+str_t* utils_conf_value(conf_t*, const char *key);
 
 #ifdef __cplusplus
 }

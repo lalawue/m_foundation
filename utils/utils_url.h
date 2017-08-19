@@ -5,20 +5,19 @@
  * under the terms of the MIT license. See LICENSE for details.
  */
 
-#ifndef PLAT_TIME_H
-#define PLAT_TIME_H
+/* code from 'http://blog.csdn.net/langeldep/article/details/6264058',
+ * no license mentioned
+ */
+
+#ifndef UTILS_URL_H
+#define UTILS_URL_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdint.h>
-
-#define MTIME_MICRO_PER_SEC 1000000
-#define MTIME_MILLI_PER_SEC 1000
-
-int64_t mtime_current(void);    /* in micro sec */
-void mtime_sleep(int millisecond);
+   int url_decode(char *str, int len);
+   char *url_encode(char const *s, int len, int *new_length);
 
 #ifdef __cplusplus
 }

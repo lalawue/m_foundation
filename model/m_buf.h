@@ -8,6 +8,10 @@
 #ifndef M_BUF_H
 #define M_BUF_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdarg.h>
 
 typedef struct s_buf {
@@ -41,5 +45,9 @@ int buf_forward_ptr(buf_t *b, int offset);
 int buf_forward_ptw(buf_t *b, int offset);
 
 void buf_debug(buf_t *b);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

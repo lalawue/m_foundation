@@ -8,6 +8,10 @@
 #ifndef M_DICT_H
 #define M_DICT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 typedef struct s_dict dict_t;
@@ -21,7 +25,6 @@ typedef void(*dict_enumerate_callback)(
    void *opaque, const char *key, int keylen, void *value, int *stop);
 
 uint32_t dict_default_key_hash(const char *key, int keylen);
-
 
 
 
@@ -40,5 +43,10 @@ int dict_set(dict_t*, const char *key, int keylen, void *value);
 void* dict_remove(dict_t*, const char *key, int keylen);
 
 void dict_foreach(dict_t*, dict_enumerate_callback cb, void *opaque);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif

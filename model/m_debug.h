@@ -24,6 +24,10 @@
 #define D_INFO    2
 #define D_VERBOSE 3             // default
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern void debug_open(char*);
 extern void debug_close(void);
 
@@ -36,3 +40,8 @@ extern void debug_log(const char *mod, int level, const char *fname,
 
 #define _mlog(MOD, LEV, ...)                            \
    debug_log(MOD, LEV, __FILE__, __LINE__, __VA_ARGS__)
+
+#ifdef __cplusplus
+}
+#endif
+

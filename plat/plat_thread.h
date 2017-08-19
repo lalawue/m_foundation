@@ -11,6 +11,10 @@
 #define MTHRD_MODE_POWER_HIGH  0 /* sched no delay */
 #define MTHRD_MODE_POWER_LOW   1 /* sched in milli seconds */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int mthrd_init(int mode);
 void mthrd_fini(void);
 
@@ -27,5 +31,9 @@ void mthrd_suspend(int th_type);
 void mthrd_resume(int th_type);
 
 int mthrd_is_running(int th_type);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

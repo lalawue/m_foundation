@@ -13,6 +13,10 @@
 #define USTR_DELIM_MAX_LEN (64)
 #define USTR_CMP_RESULT_INVALID (123456)
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct s_str str_t;
 
 /* functions create/destroy str head
@@ -49,5 +53,9 @@ str_t* str_split(str_t *m, const char *delim, int icase);
 int str_bsearch(str_t *m, str_t*);
 
 void str_debug(str_t *m, int print, int child);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
