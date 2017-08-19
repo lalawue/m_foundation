@@ -16,9 +16,9 @@
 #include <arpa/inet.h>
 #endif
 
-/* fromo cloudwu's https://github.com/cloudwu/mptun/blob/master/mptun.c */
+#include "m_debug.h"
 
-#define DEF_BUFF_SIZE MNET_BUF_SIZE
+/* fromo cloudwu's https://github.com/cloudwu/mptun/blob/master/mptun.c */
 
 #ifndef DEF_TIME_DIFF
 #define DEF_TIME_DIFF 1800
@@ -150,12 +150,12 @@ hmac(uint64_t x, uint64_t y) {
 }
 
 int
-rc4_encrypt(const char *in, int sz, char *out, uint64_t key, time_t ti) {
-   uint64_t h = rc4_hash_key(in, sz);
+rc4_encrypt(const char *in, int in_sz, char *out, int out_sz, uint64_t key, time_t ti) {
+   uint64_t h = rc4_hash_key(in, in_sz);
    uint32_t tmp;
    struct rc4_sbox rs;
-   if (sz > DEF_BUFF_SIZE - 8) {
-      _err("insufficient buffer size %d\n", sz);
+   if (in_sz > out_sz - 8) {
+      _err("insufficient out buffer size %d\n", out_sz);
       return -1;
    }
    key = hmac(key, ti);
@@ -165,19 +165,19 @@ rc4_encrypt(const char *in, int sz, char *out, uint64_t key, time_t ti) {
    memcpy(out, &tmp, 4);
    tmp = htonl((uint32_t)key ^ (uint32_t)(key >> 32));
    memcpy(out+4, &tmp, 4);
-   rc4_encode(&rs, (const uint8_t *)in, (uint8_t *)out+8, sz);
+   rc4_encode(&rs, (const uint8_t *)in, (uint8_t *)out+8, in_sz);
 
-   return sz + 8;
+   return in_sz + 8;
 }
 
 int
-rc4_decrypt(const char *in, int sz, char *out, uint64_t key, time_t ti) {
+rc4_decrypt(const char *in, int in_sz, char *out, int out_sz, uint64_t key, time_t ti) {
    uint32_t pt, check;
    uint64_t h;
    struct rc4_sbox rs;
-   sz -= 8;
-   if (sz < 0) {
-      _err("insufficient buffer size %d\n", sz);
+   in_sz -= 8;
+   if (in_sz < 0 || out_sz < in_sz) {
+      _err("insufficient in buffer size %d\n", in_sz);
       return -1;
    }
 
@@ -192,13 +192,13 @@ rc4_decrypt(const char *in, int sz, char *out, uint64_t key, time_t ti) {
    key = hmac(key, pt);
    rc4_init(&rs, key);
 
-   rc4_encode(&rs, (const uint8_t *)in+8, (uint8_t *)out, sz);
-   h = rc4_hash_key(out, sz);
+   rc4_encode(&rs, (const uint8_t *)in+8, (uint8_t *)out, in_sz);
+   h = rc4_hash_key(out, in_sz);
    key ^= h;
 
    if (check != ((uint32_t)key ^ (uint32_t)(key >> 32))) {
       _err("key invalid\n");
       return -1;
    }
-   return sz;
+   return in_sz;
 }

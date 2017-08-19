@@ -12,7 +12,7 @@
 
 uint64_t rc4_hash_key(const char * str, int sz);
 
-int rc4_encrypt(const char *in, int sz, char *out, uint64_t key, time_t ti);
-int rc4_decrypt(const char *in, int sz, char *out, uint64_t key, time_t ti);
+int rc4_encrypt(const char *in, int in_sz, char *out, int out_sz, uint64_t key, time_t ti);
+int rc4_decrypt(const char *in, int in_sz, char *out, int out_sz, uint64_t key, time_t ti);
 
 #endif
