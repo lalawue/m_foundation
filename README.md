@@ -1,4 +1,4 @@
 
 # About
 
-m_foudation was a cross platform library.
+m_foundation was a cross platform library.
