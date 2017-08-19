@@ -9,6 +9,7 @@
 #define M_RC4_H
 
 #include <time.h>
+#include <stdint.h>
 
 uint64_t rc4_hash_key(const char * str, int sz);
 
