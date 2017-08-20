@@ -7,9 +7,9 @@ RELEASE= -O2
 
 LIBS= -lc
 
-LIB_SRCS := $(shell find . -name "*.c")
+LIB_SRCS := $(shell find src -name "*.c")
 
-DIRS := $(shell find . -type d)
+DIRS := $(shell find src -type d)
 
 INCS := $(foreach n, $(DIRS), -I$(n))
 
