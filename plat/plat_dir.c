@@ -111,28 +111,30 @@ mdir_open(const char *dir_path) {
       return NULL;
    }
 
-   mdir_t *d = (mdir_t*)mm_malloc(sizeof(*d));
-   if (d == NULL) goto fail;
+   mdir_t *d = NULL;
+   do {
+      d = (mdir_t*)mm_malloc(sizeof(*d));
+      if (d == NULL) { break; };
 
 #ifdef _WIN32
-   char tmp[MDIR_MAX_PATH]={0}, fname[MDIR_MAX_PATH]={0};
-   int len = charset_to_sysm(dir_path, tmp, MDIR_MAX_PATH, fname, MDIR_MAX_PATH);
-   strcat(fname, "*.*");
-   d->fh = _findfirst(fname, &d->fdata);
-   if (d->fh < 0) { goto fail; }
-   /* _log("fh = %d\n", d->fh); */
+      char tmp[MDIR_MAX_PATH]={0}, fname[MDIR_MAX_PATH]={0};
+      int len = charset_to_sysm(dir_path, tmp, MDIR_MAX_PATH, fname, MDIR_MAX_PATH);
+      strcat(fname, "*.*");
+      d->fh = _findfirst(fname, &d->fdata);
+      if (d->fh < 0) { break; }
+      /* _log("fh = %d\n", d->fh); */
 #else
-   if ((d->dirp=opendir(dir_path)) == NULL) { goto fail; }
+      if ((d->dirp=opendir(dir_path)) == NULL) { break; }
 #endif
 
-   int dir_len = (int)strlen(dir_path);
-   d->dir_path = (char*)mm_malloc(dir_len + 1);
-   memcpy(d->dir_path, dir_path, dir_len);
-   d->dir_path[dir_len] = 0;
-   d->tmp_path = (char*)mm_malloc(2*MDIR_MAX_PATH);
-   return d;
+      int dir_len = (int)strlen(dir_path);
+      d->dir_path = (char*)mm_malloc(dir_len + 1);
+      memcpy(d->dir_path, dir_path, dir_len);
+      d->dir_path[dir_len] = 0;
+      d->tmp_path = (char*)mm_malloc(2*MDIR_MAX_PATH);
+      return d;
+   } while (0);
 
-  fail:
    if (d) { mm_free(d); }
    _err("fail to open dir %s\n", dir_path);
    return NULL;

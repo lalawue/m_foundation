@@ -132,7 +132,7 @@ debug_log(const char *mod, int level, const char *fname,
       }
 
       if (d->option & D_OPT_LEVEL) {
-         static char *clev[D_VERBOSE + 1] = {
+         static const char *clev[D_VERBOSE + 1] = {
             "Err", "Warn", "Info", "Verbose"
          };
          level = level & D_VERBOSE;

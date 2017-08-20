@@ -12,13 +12,13 @@
 extern "C" {
 #endif
 
-void* mm_malloc_ex(unsigned long, char*, int);
+void* mm_malloc_ex(unsigned long, const char*, int);
 #define mm_malloc(sz) mm_malloc_ex((sz),__FILE__,__LINE__)
 
-void* mm_realloc_ex(void*,unsigned long, char*, int);
+void* mm_realloc_ex(void*,unsigned long, const char*, int);
 #define mm_realloc(ptr,sz) mm_realloc_ex((ptr),(sz),__FILE__,__LINE__)
 
-unsigned long mm_free_ex(void*, char*, int);
+unsigned long mm_free_ex(void*, const char*, int);
 #define mm_free(ptr) mm_free_ex(ptr,__FILE__,__LINE__)
 
 int mm_has(void*);

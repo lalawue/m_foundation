@@ -21,7 +21,7 @@
 typedef struct s_mem {
    struct s_mem *prev;         /* head prev == NULL */
    struct s_mem *next;         /* last next == NULL */
-   char *fname;
+   const char *fname;
    unsigned long size;
    unsigned short line;
    unsigned short magic;
@@ -39,7 +39,7 @@ static memhead_t g_mh;
 #define _MEM_TO_PTR(M) ((uint8_t*)(M) + sizeof(mem_t))
 #define _PTR_TO_MEM(P) ((mem_t*)((uint8_t*)(P) - sizeof(mem_t)))
 
-void* mm_malloc_ex(unsigned long sz, char *fname, int line) {
+void* mm_malloc_ex(unsigned long sz, const char *fname, int line) {
    memhead_t *mh = &g_mh;
    mem_t *m = (mem_t*)malloc(sz + sizeof(mem_t));
    if ( m ) {
@@ -77,7 +77,7 @@ int mm_has(void *p) {
    return 0;
 }
 
-unsigned long mm_free_ex(void *p, char *fname, int line) {
+unsigned long mm_free_ex(void *p, const char *fname, int line) {
    memhead_t *mh = &g_mh;
    _lock(mh->lock); 
    if (p && mh->count>0) {
@@ -103,7 +103,7 @@ unsigned long mm_free_ex(void *p, char *fname, int line) {
    return 0;
 }
 
-void* mm_realloc_ex(void *p, unsigned long sz, char *fname, int line) {
+void* mm_realloc_ex(void *p, unsigned long sz, const char *fname, int line) {
    memhead_t *mh = &g_mh;
    if ( p ) {
       mem_t *m = _PTR_TO_MEM(p);
@@ -128,7 +128,7 @@ void* mm_realloc_ex(void *p, unsigned long sz, char *fname, int line) {
 }
 
 typedef struct {
-   char *fname;
+   const char *fname;
    size_t size;
 } mrec_t;
 

@@ -28,7 +28,7 @@ typedef struct s_lst_iter {
 
 /* list: (first, ..., last), (prev, next) */
 
-lst_t* lst_create_ex(char*,int);
+lst_t* lst_create_ex(const char*,int);
 #define lst_create() lst_create_ex(__FILE__,__LINE__)
 
 void lst_destroy(lst_t*);

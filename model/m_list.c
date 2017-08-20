@@ -77,7 +77,7 @@ _lst_node_delete(lst_t *lst, lst_node_t *n) {
    return data;
 }
 
-lst_t* lst_create_ex(char *fname, int line) {
+lst_t* lst_create_ex(const char *fname, int line) {
    lst_t *lst = (lst_t*)mm_malloc_ex(sizeof(*lst), fname, line);
    /* assert(lst); */
    /* memset(lst, 0, sizeof(*lst)); */
