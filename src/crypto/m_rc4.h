@@ -11,6 +11,8 @@
 #include <time.h>
 #include <stdint.h>
 
+#define RC4_CRYPTO_OCCUPY 8
+
 uint64_t rc4_hash_key(const char * str, int sz);
 
 int rc4_encrypt(const char *in, int in_sz, char *out, int out_sz, uint64_t key, time_t ti);

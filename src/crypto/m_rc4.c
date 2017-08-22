@@ -16,6 +16,7 @@
 #include <arpa/inet.h>
 #endif
 
+#include "m_rc4.h"
 #include "m_debug.h"
 
 /* fromo cloudwu's https://github.com/cloudwu/mptun/blob/master/mptun.c */
@@ -154,7 +155,7 @@ rc4_encrypt(const char *in, int in_sz, char *out, int out_sz, uint64_t key, time
    uint64_t h = rc4_hash_key(in, in_sz);
    uint32_t tmp;
    struct rc4_sbox rs;
-   if (in_sz > out_sz - 8) {
+   if (in_sz > out_sz - RC4_CRYPTO_OCCUPY) {
       _err("insufficient out buffer size %d\n", out_sz);
       return -1;
    }
@@ -167,7 +168,7 @@ rc4_encrypt(const char *in, int in_sz, char *out, int out_sz, uint64_t key, time
    memcpy(out+4, &tmp, 4);
    rc4_encode(&rs, (const uint8_t *)in, (uint8_t *)out+8, in_sz);
 
-   return in_sz + 8;
+   return in_sz + RC4_CRYPTO_OCCUPY;
 }
 
 int
@@ -175,7 +176,7 @@ rc4_decrypt(const char *in, int in_sz, char *out, int out_sz, uint64_t key, time
    uint32_t pt, check;
    uint64_t h;
    struct rc4_sbox rs;
-   in_sz -= 8;
+   in_sz -= RC4_CRYPTO_OCCUPY;
    if (in_sz < 0 || out_sz < in_sz) {
       _err("insufficient in buffer size %d\n", in_sz);
       return -1;
@@ -192,7 +193,7 @@ rc4_decrypt(const char *in, int in_sz, char *out, int out_sz, uint64_t key, time
    key = hmac(key, pt);
    rc4_init(&rs, key);
 
-   rc4_encode(&rs, (const uint8_t *)in+8, (uint8_t *)out, in_sz);
+   rc4_encode(&rs, (const uint8_t *)in + RC4_CRYPTO_OCCUPY, (uint8_t *)out, in_sz);
    h = rc4_hash_key(out, in_sz);
    key ^= h;
 
