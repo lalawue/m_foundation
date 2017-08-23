@@ -5,7 +5,9 @@
  * under the terms of the MIT license. See LICENSE for details.
  */
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 #define  _CRT_SECURE_NO_WARNINGS
 
 #include <stdio.h>

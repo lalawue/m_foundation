@@ -15,6 +15,8 @@
 #include "plat_lock.h"
 #include "plat_thread.h"
 
+#ifdef PLAT_THREAD
+
 #define _err(...)  _mlog("thrd", D_ERROR, __VA_ARGS__)
 #define _log(...)  _mlog("thrd", D_INFO, __VA_ARGS__)
 
@@ -293,44 +295,6 @@ int mthrd_is_running(int th_type) {
       mthrd_t *m = &_g_mth.mthrd_ary[th_type];
       return !m->suspend;
    }
-   return 0;
-}
-
-#ifdef PLAT_THREAD_TESTING
-static void _th_add_1(void *param) {
-   int *a = (int*)param;
-   *a += 1;
-   printf("1: a=%d\n", *a);
-}
-
-static void _th_sub_2(void *param) {
-   int *a = (int*)param;
-   *a -= 2;
-   printf("2: a=%d\n", *a);
-}
-
-int main(int argc, char *argv[]) {
-   int a = 0, b = 0;
-   int time = 0;
-
-   mthrd_init(0);
-
-   mthrd_loop(MTHRD_MAIN, _th_add_1, &a, 10);
-   mthrd_loop(MTHRD_MAIN, _th_sub_2, &a, 20);
-   mthrd_loop(MTHRD_AUX, _th_add_1, &b, 10);
-   mthrd_loop(MTHRD_AUX, _th_sub_2, &b, 20);
-
-   time = 1000;
-   while (--time >= 0) {
-      /* dispatch_main(); */
-      mtime_sleep(1);
-   }
-
-   mm_report(0);
-   printf("----------\n");
-
-   mthrd_fini();
-   mm_report(0);
    return 0;
 }
 #endif
