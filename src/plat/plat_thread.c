@@ -117,6 +117,10 @@ _mthrd_wrapper_func(THRD_PARAM_TYPE param)
             m->have_new = 0;
             _unlock(m->lock_free);
          }
+      } else {
+         while ( m->suspend ) {
+            mtime_sleep(10);
+         }
       }
 
       if (gm->mode == MTHRD_MODE_POWER_HIGH) {

@@ -27,7 +27,7 @@ typedef int(*mthread_func)(void*);
 
 int mthrd_after(int th_type, mthread_func func, void *ud, int ms);
 
-void mthrd_suspend(int th_type);
+void mthrd_suspend(int th_type); /* at least 10 milli second suspend */
 void mthrd_resume(int th_type);
 
 int mthrd_is_running(int th_type);
