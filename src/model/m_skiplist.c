@@ -38,7 +38,7 @@ struct s_skt {
 
 static inline skt_node_t*
 _newNodeOfLevel(int level) {
-   return mm_malloc(sizeof(skt_node_t) + level*sizeof(skt_node_t*));
+   return (skt_node_t*)mm_malloc(sizeof(skt_node_t) + level*sizeof(skt_node_t*));
 }
 
 static void
