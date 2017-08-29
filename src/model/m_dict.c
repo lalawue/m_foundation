@@ -51,10 +51,14 @@ dict_create(int capacity_init, float expand_factor, dict_key_hash_callback cb) {
 }
 
 void
-dict_destroy(dict_t *d) {
+dict_destroy(dict_t *d, dict_enumerate_callback cb, void *opaque) {
    if (d) {
       while (lst_count(d->kv_lst)) {
-         mm_free(lst_popf(d->kv_lst));
+         dict_kv_t *kv = lst_popf(d->kv_lst);
+         if (cb) {
+            cb(opaque, kv->key, kv->keylen, kv->value, NULL);
+         }
+         mm_free(kv);
       }
       lst_destroy(d->kv_lst);
       mm_free(d->kv_cache);

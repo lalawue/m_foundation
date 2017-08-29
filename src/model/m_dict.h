@@ -28,12 +28,13 @@ uint32_t dict_default_key_hash(const char *key, int keylen);
 
 
 
+
 /* interface
  */
 
 // default when capacity_init:0, expand_factor:0, cb:NULL
 dict_t* dict_create(int capacity_init, float expand_factor, dict_key_hash_callback cb);
-void dict_destroy(dict_t*);
+void dict_destroy(dict_t*, dict_enumerate_callback cb, void *opaque);
 
 int dict_count(dict_t*);
 
