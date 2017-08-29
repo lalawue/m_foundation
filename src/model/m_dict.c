@@ -54,7 +54,7 @@ void
 dict_destroy(dict_t *d, dict_enumerate_callback cb, void *opaque) {
    if (d) {
       while (lst_count(d->kv_lst)) {
-         dict_kv_t *kv = lst_popf(d->kv_lst);
+         dict_kv_t *kv = (dict_kv_t*)lst_popf(d->kv_lst);
          if (cb) {
             cb(opaque, kv->key, kv->keylen, kv->value, NULL);
          }
