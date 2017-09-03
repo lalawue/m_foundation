@@ -10,9 +10,9 @@
 
 #include <stdint.h>
 
-#define XOR64_CHECKSUME_SIZE 8 /* bytes */
+#define XOR64_CHECKSUM_SIZE 8 /* bytes */
 
-int xor64_checksum_gen(uint8_t *buf_head_8bytes_for_checksum, int len);
-int xor64_checksum_check(uint8_t *buf_input, int len);
+int xor64_checksum_gen(uint8_t *buf, int len, uint8_t *checksum);
+int xor64_checksum_check(uint8_t *buf, int len, uint8_t *checksum);
 
 #endif

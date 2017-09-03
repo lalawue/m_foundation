@@ -24,11 +24,9 @@ _64bit_xor(uint8_t *buf, int bytes) {
 }
 
 int
-xor64_checksum_gen(uint8_t *buf_head_8bytes_for_checksum, int len) {
-   if (buf_head_8bytes_for_checksum && (len >= 16)) {
-      uint8_t *checksum = buf_head_8bytes_for_checksum;
-      uint8_t *input = &buf_head_8bytes_for_checksum[8];
-      uint64_t ret = _64bit_xor(input, len - 8);
+xor64_checksum_gen(uint8_t *buf, int len, uint8_t *checksum) {
+   if (buf && checksum && len>=16) {
+      uint64_t ret = _64bit_xor(buf, len);
       memcpy(checksum, &ret, sizeof(ret));
       return 1;
    }
@@ -36,11 +34,10 @@ xor64_checksum_gen(uint8_t *buf_head_8bytes_for_checksum, int len) {
 }
 
 int
-xor64_checksum_check(uint8_t *buf_input, int len) {
-   if (buf_input && len>=16) {
-      uint8_t *input = &buf_input[8];
-      uint64_t ret = _64bit_xor(input, len - 8);
-      return (0 == memcmp((void*)&ret, (void*)buf_input, sizeof(ret)));
+xor64_checksum_check(uint8_t *buf, int len, uint8_t *checksum) {
+   if (buf && checksum && len>=16) {
+      uint64_t ret = _64bit_xor(buf, len);
+      return (0 == memcmp((void*)&ret, (void*)checksum, sizeof(ret)));
    }
    return 0;
 }
@@ -52,29 +49,34 @@ xor64_checksum_check(uint8_t *buf_input, int len) {
 
 static void
 _invert_bit_offset(uint8_t *buf, int offset, int bits) {
-   uint8_t val = buf[offset] & (1 << bits);
-   if (val) { buf[offset] &= ~val; }
-   else     { buf[offset] |= (1 << bits); }
+   if (bits>=0 & bits<=7) {
+      uint8_t val = buf[offset] & (1 << bits);
+      if (val) { buf[offset] &= ~val; }
+      else     { buf[offset] |= (1 << bits); }
+   }
 }
 
 int
 main(int argc, char *argv[]) {
-   uint8_t buf[1024];
-   memset(buf, 0, 1024);
+   int buf_len = 2049;
+   uint8_t buf[buf_len];
 
-   for (int i=0; i<1024; i++) {
+   uint8_t checksum[8];
+
+   memset(buf, 0, buf_len);
+
+   for (int i=0; i<buf_len; i++) {
       buf[i] = random();
    }
 
-   if ( xor64_checksum_gen(buf, 1024) ) {
+   if ( xor64_checksum_gen(buf, buf_len, checksum) ) {
 
-      _invert_bit_offset(buf, 21, 0);
-      _invert_bit_offset(buf, 21, 0);
-      /* _invert_bit_offset(buf, 889, 4); */
-      /* _invert_bit_offset(buf, 231, 7); */
+      _invert_bit_offset(buf, buf_len-1, 7);
+      _invert_bit_offset(buf, buf_len-1, 7);
+      //_invert_bit_offset(buf, 889, 4);
+      //_invert_bit_offset(buf, 231, 7);
 
-
-      if( xor64_checksum_check(buf, 1024) ) {
+      if( xor64_checksum_check(buf, buf_len, checksum) ) {
          printf("valid checksum\n");
       } else {
          printf("invalid checksum !\n");
