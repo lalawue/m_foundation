@@ -16,10 +16,10 @@ INCS := $(foreach n, $(DIRS), -I$(n))
 all: debug
 
 debug: $(LIB_SRCS)
-	$(CC) $(DEBUG) $(CFLAGS) $(INCS) -o libmfoundation.dylib $^ $(LIBS) -shared
+	$(CC) $(DEBUG) $(CFLAGS) $(INCS) -o libmfoundation.dylib $^ $(LIBS) -shared -fPIC
 
 release: $(LIB_SRCS)
-	$(CC) $(RELEASE) $(CFLAGS) $(INCS) -o libmfoundation.out $^ $(LIBS) -shared
+	$(CC) $(RELEASE) $(CFLAGS) $(INCS) -o libmfoundation.dylib $^ $(LIBS) -shared -fPIC
 
 clean:
 	rm -rf *.dylib *.dSYM
