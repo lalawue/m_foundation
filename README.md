@@ -3,8 +3,8 @@
 [1]: https://img.shields.io/badge/license-MIT-blue.svg
 [2]: LICENSE
 
-[3]: https://travis-ci.org/lalawue/m_tunnel.svg?branch=master
-[4]: https://travis-ci.org/lalawue/m_tunnel
+[3]: https://travis-ci.org/lalawue/m_foundation.svg?branch=master
+[4]: https://travis-ci.org/lalawue/m_foundation
 
 # About
 
