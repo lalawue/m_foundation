@@ -34,6 +34,7 @@ struct s_skt {
    int level;
    skt_node_t *header; /* pointer to header */
    skt_node_t *NIL;
+   int count;
 };
 
 static inline skt_node_t*
@@ -41,22 +42,21 @@ _newNodeOfLevel(int level) {
    return (skt_node_t*)mm_malloc(sizeof(skt_node_t) + level*sizeof(skt_node_t*));
 }
 
-static void
-_skt_init(skt_t *lst) { 
-   lst->NIL = _newNodeOfLevel(0);
-   lst->NIL->key = 0x7fffffff;
-   lst->randomBits = random();
-   lst->randomsLeft = BitsInRandom/2;
-};
-
 skt_t*
 skt_create(void) {
-
    skt_t *lst = (skt_t*)mm_malloc(sizeof(*lst));
    if (lst) {
-      _skt_init(lst);
+      lst->NIL = _newNodeOfLevel(0);
+      lst->NIL->key = 0x7fffffff;
+      
+      lst->randomBits = random();
+      lst->randomsLeft = BitsInRandom/2;
+      
       lst->level = 0;
+      lst->count = 0;
+      
       lst->header = _newNodeOfLevel(MaxNumberOfLevels);
+      
       for (int i=0; i<MaxNumberOfLevels; i++) {
          lst->header->forward[i] = lst->NIL;
       }
@@ -134,6 +134,7 @@ skt_insert(skt_t *lst, uint32_t key, void *value) {
          p->forward[k] = q;
       } while(--k >= 0);
 
+      lst->count += 1;
       return 1;
    }
    return 0;
@@ -164,6 +165,7 @@ skt_remove(skt_t *lst, uint32_t key) {
             m--;
          }
          lst->level = m;
+         lst->count -= 1;
          return 1;
       }
    }
@@ -189,4 +191,9 @@ skt_query(skt_t *lst, uint32_t key) {
       }
    }
    return NULL;
+}
+
+int
+skt_count(skt_t *lst) {
+   return lst ? lst->count : 0;
 }

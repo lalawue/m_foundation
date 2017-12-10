@@ -24,6 +24,8 @@ void* skt_query(skt_t *lst, uint32_t key);
 int   skt_insert(skt_t *lst, uint32_t key, void *value);
 int   skt_remove(skt_t *lst, uint32_t key);
 
+int   skt_count(skt_t *lst);
+
 #ifdef __cplusplus
 }
 #endif
