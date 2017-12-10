@@ -19,7 +19,11 @@
 #elif defined(_WIN32) || defined(_WIN64)
 #define PLAT_OS_WIN
 
-#else
+#elif defined(__linux__)
 #define PLAT_OS_LINUX
+
+#elif define(__FreeBSD__)
+#define PLAT_OS_FREEBSD
+
 #endif
 

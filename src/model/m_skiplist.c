@@ -15,10 +15,11 @@
 
 #include "m_mem.h"
 #include "m_skiplist.h"
+#include "m_prng.h"
 
-#define BitsInRandom 31
-#define MaxNumberOfLevels 16
-#define MaxLevel (MaxNumberOfLevels - 1)
+#define kBitsInRandom 31
+#define kMaxNumberOfLevels 16
+#define kMaxLevel (kMaxNumberOfLevels - 1)
 
 typedef struct s_skt_node {
    uint32_t key;
@@ -35,6 +36,7 @@ struct s_skt {
    skt_node_t *header; /* pointer to header */
    skt_node_t *NIL;
    int count;
+   prng_t rng;
 };
 
 static inline skt_node_t*
@@ -46,37 +48,46 @@ skt_t*
 skt_create(void) {
    skt_t *lst = (skt_t*)mm_malloc(sizeof(*lst));
    if (lst) {
+      prng_init(&lst->rng);
+      
       lst->NIL = _newNodeOfLevel(0);
       lst->NIL->key = 0x7fffffff;
       
-      lst->randomBits = random();
-      lst->randomsLeft = BitsInRandom/2;
+      lst->randomBits = prng_next(&lst->rng);
+      lst->randomsLeft = kBitsInRandom / 2;
       
       lst->level = 0;
       lst->count = 0;
       
-      lst->header = _newNodeOfLevel(MaxNumberOfLevels);
+      lst->header = _newNodeOfLevel(kMaxNumberOfLevels);
       
-      for (int i=0; i<MaxNumberOfLevels; i++) {
+      for (int i=0; i<kMaxNumberOfLevels; i++) {
          lst->header->forward[i] = lst->NIL;
       }
    }
    return lst;
-}; 
+}
+
+static void
+_skt_loop_list_with_callback(skt_t *lst, skt_callback cb, int free_node) {
+   skt_node_t *p, *q;   
+   p = lst->header;
+   do {
+      q = p->forward[0];
+      if (cb) {
+         cb(p->key, p->value);
+      }
+      if (free_node) {
+         mm_free(p);
+      }
+      p = q;
+   } while (p != lst->NIL);   
+}
 
 void
-skt_destroy(skt_t *lst, skt_finalize_callback cb) {
-   skt_node_t *p, *q;
+skt_destroy(skt_t *lst, skt_callback cb) {
    if (lst) {
-      p = lst->header;
-      do {
-         q = p->forward[0];
-         if (cb) {
-            cb(p->key, p->value);
-         }
-         mm_free(p);
-         p = q;
-      } while (p != lst->NIL);
+      _skt_loop_list_with_callback(lst, cb, 1);
       mm_free(lst->NIL);
       mm_free(lst);
    }
@@ -86,24 +97,24 @@ int _randomLevel(skt_t *lst) {
    int level = 0;
    int b;
    do {
-      b = lst->randomBits & 3;
+      b = lst->randomBits & 3;  /* 25% */
       if (!b) {
          level++;
       }
       lst->randomBits>>=2;
       if (--lst->randomsLeft == 0) {
-         lst->randomBits = random();
-         lst->randomsLeft = BitsInRandom/2;
-      };
+         lst->randomBits = prng_next(&lst->rng);
+         lst->randomsLeft = kBitsInRandom/2;
+      }
    } while (!b);
-   return (level>MaxLevel ? MaxLevel : level);
+   return (level > kMaxLevel ? kMaxLevel : level);
 }
 
 int
 skt_insert(skt_t *lst, uint32_t key, void *value) {
    int k;
-   skt_node_t *update[MaxNumberOfLevels];
    skt_node_t *p,*q;
+   skt_node_t *update[kMaxNumberOfLevels];   
 
    if (lst) {
       p = lst->header;
@@ -124,7 +135,7 @@ skt_insert(skt_t *lst, uint32_t key, void *value) {
       if (k > lst->level) {
          k = ++lst->level;
          update[k] = lst->header;
-      };
+      }
       q = _newNodeOfLevel(k);
       q->key = key;
       q->value = value;
@@ -143,7 +154,7 @@ skt_insert(skt_t *lst, uint32_t key, void *value) {
 int 
 skt_remove(skt_t *lst, uint32_t key) {
    int k,m;
-   skt_node_t *update[MaxNumberOfLevels];
+   skt_node_t *update[kMaxNumberOfLevels];
    skt_node_t *p, *q;
 
    if (lst) {
@@ -161,7 +172,7 @@ skt_remove(skt_t *lst, uint32_t key) {
             p->forward[k] = q->forward[k];
          }
          mm_free(q);
-         while( lst->header->forward[m]==lst->NIL && m>0 ) {
+         while (lst->header->forward[m]==lst->NIL && m>0) {
             m--;
          }
          lst->level = m;
@@ -184,13 +195,21 @@ skt_query(skt_t *lst, uint32_t key) {
          while (q = p->forward[k], q->key < key) {
             p = q;
          }
-      } while (--k >= 0);
 
-      if (q->key == key) {
-         return q->value;
-      }
+         if (q->key == key) {
+            return q->value;
+         }         
+      } while (--k >= 0);
    }
    return NULL;
+}
+
+
+void
+skt_foreach(skt_t *lst, skt_callback cb) {
+   if (lst && cb) {
+      _skt_loop_list_with_callback(lst, cb, 0);
+   }
 }
 
 int
