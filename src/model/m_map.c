@@ -10,31 +10,31 @@
 #include <string.h>
 #include <assert.h>
 
-#include "m_dict.h"
+#include "m_map.h"
 #include "m_list.h"
 #include "m_mem.h"
 
-typedef struct s_dict_kv {
-   struct s_dict_kv *next;
+typedef struct s_map_kv {
+   struct s_map_kv *next;
    lst_node_t *node;            /* node of list */
    uint32_t hash;
    void *value;
    int keylen;
    void *key;
-} dict_kv_t;
+} map_kv_t;
 
-struct s_dict {
+struct s_map {
    int count;
    int capacity;
    float factor;
-   dict_key_hash_callback hash_cb;
+   map_key_hash_callback hash_cb;
    lst_t *kv_lst;
-   dict_kv_t **kv_cache;
+   map_kv_t **kv_cache;
 };
 
-dict_t*
-dict_create(int capacity_init, float expand_factor, dict_key_hash_callback cb) {
-   dict_t *d = (dict_t*)mm_malloc(sizeof(dict_t));
+map_t*
+map_create(int capacity_init, float expand_factor, map_key_hash_callback cb) {
+   map_t *d = (map_t*)mm_malloc(sizeof(map_t));
    if (d) {
       d->capacity = capacity_init>0 ? capacity_init : 4;
       if (expand_factor>0 && expand_factor<1.0) {
@@ -42,8 +42,8 @@ dict_create(int capacity_init, float expand_factor, dict_key_hash_callback cb) {
       } else {
          d->factor = 0.75;
       }
-      d->hash_cb = cb ? cb : dict_default_key_hash;
-      d->kv_cache = (dict_kv_t**)mm_malloc(capacity_init * sizeof(dict_kv_t*));
+      d->hash_cb = cb ? cb : map_default_key_hash;
+      d->kv_cache = (map_kv_t**)mm_malloc(capacity_init * sizeof(map_kv_t*));
       d->kv_lst = lst_create();
       return d;
    }
@@ -51,10 +51,10 @@ dict_create(int capacity_init, float expand_factor, dict_key_hash_callback cb) {
 }
 
 void
-dict_destroy(dict_t *d, dict_enumerate_callback cb, void *opaque) {
+map_destroy(map_t *d, map_enumerate_callback cb, void *opaque) {
    if (d) {
       while (lst_count(d->kv_lst)) {
-         dict_kv_t *kv = (dict_kv_t*)lst_popf(d->kv_lst);
+         map_kv_t *kv = (map_kv_t*)lst_popf(d->kv_lst);
          if (cb) {
             cb(opaque, kv->key, kv->keylen, kv->value, NULL);
          }
@@ -67,7 +67,7 @@ dict_destroy(dict_t *d, dict_enumerate_callback cb, void *opaque) {
 }
 
 int
-dict_count(dict_t *d) {
+map_count(map_t *d) {
    if (d) {
       return d->count;
    }
@@ -75,7 +75,7 @@ dict_count(dict_t *d) {
 }
 
 uint32_t
-dict_default_key_hash(const void *key, int keylen) {
+map_default_key_hash(const void *key, int keylen) {
    uint32_t h = (uint32_t)keylen;
    for (int i=0; i<keylen; i++) {
       h = h ^ ((h<<5)+(h>>2)+(uint32_t)((unsigned char*)key)[i]);
@@ -83,10 +83,10 @@ dict_default_key_hash(const void *key, int keylen) {
    return h;
 }
 
-static dict_kv_t*
-_dict_get_kv(dict_t *d, const void *key, int keylen, uint32_t *out_hash) {
+static map_kv_t*
+_map_get_kv(map_t *d, const void *key, int keylen, uint32_t *out_hash) {
    uint32_t hash = d->hash_cb(key, keylen);
-   dict_kv_t *kv = d->kv_cache[hash % d->capacity];
+   map_kv_t *kv = d->kv_cache[hash % d->capacity];
 
    if (out_hash) {
       *out_hash = hash;
@@ -102,17 +102,17 @@ _dict_get_kv(dict_t *d, const void *key, int keylen, uint32_t *out_hash) {
 }
 
 static void
-_dict_update_index(dict_t *d, dict_kv_t *kv) {
+_map_update_index(map_t *d, map_kv_t *kv) {
    uint32_t h = kv->hash % d->capacity;
    kv->next = d->kv_cache[h];
    d->kv_cache[h] = kv;
 }
 
 static int
-_dict_expand(dict_t *d) {
+_map_expand(map_t *d) {
    if (d->count >= (int)(d->capacity * d->factor)) {
       int capacity = d->capacity << 1;
-      dict_kv_t **kv_cache = (dict_kv_t**)mm_realloc(d->kv_cache, capacity * sizeof(dict_kv_t*));
+      map_kv_t **kv_cache = (map_kv_t**)mm_realloc(d->kv_cache, capacity * sizeof(map_kv_t*));
       if (kv_cache == NULL) {
          return 0;
       }
@@ -120,20 +120,20 @@ _dict_expand(dict_t *d) {
       d->kv_cache = kv_cache;
       d->capacity = capacity;
 
-      memset(d->kv_cache, 0, capacity * sizeof(dict_kv_t*));
+      memset(d->kv_cache, 0, capacity * sizeof(map_kv_t*));
 
       lst_foreach(it, d->kv_lst) {
-         dict_kv_t *kv = (dict_kv_t*)lst_iter_data(it);
-         _dict_update_index(d, kv);
+         map_kv_t *kv = (map_kv_t*)lst_iter_data(it);
+         _map_update_index(d, kv);
       }
    }
    return 1;         
 }
 
 void*
-dict_get(dict_t *d, const void *key, int keylen) {
+map_get(map_t *d, const void *key, int keylen) {
    if  (d && key && keylen>0) {
-      dict_kv_t *kv = _dict_get_kv(d, key, keylen, NULL);
+      map_kv_t *kv = _map_get_kv(d, key, keylen, NULL);
       if (kv) {
          return kv->value;
       }
@@ -144,21 +144,21 @@ dict_get(dict_t *d, const void *key, int keylen) {
 /* return 1 when success stored
  */
 int
-dict_set(dict_t *d, const void *key, int keylen, void *value) {
+map_set(map_t *d, const void *key, int keylen, void *value) {
    if (d && key && keylen>0 && value) {
       uint32_t hash = 0;
-      dict_kv_t *kv = _dict_get_kv(d, key, keylen, &hash);
+      map_kv_t *kv = _map_get_kv(d, key, keylen, &hash);
 
       if (kv) {
          kv->value = value;
          return 1;
       }
 
-      if (_dict_expand(d) <= 0) {
+      if (_map_expand(d) <= 0) {
          return 0;
       }
 
-      kv = (dict_kv_t*)mm_malloc(sizeof(*kv) + keylen + 1);
+      kv = (map_kv_t*)mm_malloc(sizeof(*kv) + keylen + 1);
       if (kv) {
          kv->node = lst_pushl(d->kv_lst, kv);
          kv->hash = hash;
@@ -168,7 +168,7 @@ dict_set(dict_t *d, const void *key, int keylen, void *value) {
          kv->key = (((unsigned char*)kv) + sizeof(*kv));
          memcpy(kv->key, key, keylen);
 
-         _dict_update_index(d, kv);
+         _map_update_index(d, kv);
          d->count++;
          return 1;
       }
@@ -177,13 +177,13 @@ dict_set(dict_t *d, const void *key, int keylen, void *value) {
 }
 
 void*
-dict_remove(dict_t *d, const void *key, int keylen) {
+map_remove(map_t *d, const void *key, int keylen) {
    if (d && key && keylen) {
-      dict_kv_t *rkv = _dict_get_kv(d, key, keylen, NULL);
+      map_kv_t *rkv = _map_get_kv(d, key, keylen, NULL);
       if (rkv) {
          void *value = rkv->value;
          uint32_t h = rkv->hash % d->capacity;
-         dict_kv_t *kv = d->kv_cache[h];
+         map_kv_t *kv = d->kv_cache[h];
 
          if (kv == rkv) {
             d->kv_cache[h] = kv->next;
@@ -205,11 +205,11 @@ dict_remove(dict_t *d, const void *key, int keylen) {
 }
 
 void
-dict_foreach(dict_t *d, dict_enumerate_callback cb, void *opaque) {
+map_foreach(map_t *d, map_enumerate_callback cb, void *opaque) {
    if (d && cb) {
       int stop = 0;
       lst_foreach(it, d->kv_lst) {
-         dict_kv_t *e = (dict_kv_t*)lst_iter_data(it);
+         map_kv_t *e = (map_kv_t*)lst_iter_data(it);
          cb(opaque, e->key, e->keylen, e->value, &stop);
          if (stop) {
             break;
