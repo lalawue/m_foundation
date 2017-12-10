@@ -22,7 +22,7 @@
 #elif defined(__linux__)
 #define PLAT_OS_LINUX
 
-#elif define(__FreeBSD__)
+#elif defined(__FreeBSD__)
 #define PLAT_OS_FREEBSD
 
 #endif
