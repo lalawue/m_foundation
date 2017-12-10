@@ -19,12 +19,12 @@ typedef struct s_dict dict_t;
 
 /* helper
  */
-typedef uint32_t(*dict_key_hash_callback)(const char *name, int len);
+typedef uint32_t(*dict_key_hash_callback)(const void *name, int len);
 
 typedef void(*dict_enumerate_callback)(
-   void *opaque, const char *key, int keylen, void *value, int *stop);
+   void *opaque, const void *key, int keylen, void *value, int *stop);
 
-uint32_t dict_default_key_hash(const char *key, int keylen);
+uint32_t dict_default_key_hash(const void *key, int keylen);
 
 
 
@@ -38,10 +38,10 @@ void dict_destroy(dict_t*, dict_enumerate_callback cb, void *opaque);
 
 int dict_count(dict_t*);
 
-void* dict_get(dict_t*, const char *key, int keylen);
-int dict_set(dict_t*, const char *key, int keylen, void *value);
+void* dict_get(dict_t*, const void *key, int keylen);
+int dict_set(dict_t*, const void *key, int keylen, void *value);
 
-void* dict_remove(dict_t*, const char *key, int keylen);
+void* dict_remove(dict_t*, const void *key, int keylen);
 
 void dict_foreach(dict_t*, dict_enumerate_callback cb, void *opaque);
 

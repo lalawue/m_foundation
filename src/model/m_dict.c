@@ -20,7 +20,7 @@ typedef struct s_dict_kv {
    uint32_t hash;
    void *value;
    int keylen;
-   char *key;
+   void *key;
 } dict_kv_t;
 
 struct s_dict {
@@ -75,16 +75,16 @@ dict_count(dict_t *d) {
 }
 
 uint32_t
-dict_default_key_hash(const char *key, int keylen) {
+dict_default_key_hash(const void *key, int keylen) {
    uint32_t h = (uint32_t)keylen;
    for (int i=0; i<keylen; i++) {
-      h = h ^ ((h<<5)+(h>>2)+(uint32_t)key[i]);
+      h = h ^ ((h<<5)+(h>>2)+(uint32_t)((unsigned char*)key)[i]);
    }
    return h;
 }
 
 static dict_kv_t*
-_dict_get_kv(dict_t *d, const char *key, int keylen, uint32_t *out_hash) {
+_dict_get_kv(dict_t *d, const void *key, int keylen, uint32_t *out_hash) {
    uint32_t hash = d->hash_cb(key, keylen);
    dict_kv_t *kv = d->kv_cache[hash % d->capacity];
 
@@ -93,7 +93,7 @@ _dict_get_kv(dict_t *d, const char *key, int keylen, uint32_t *out_hash) {
    }
 
    while (kv) {
-      if ((kv->hash==hash) && (kv->keylen==keylen) && (strncmp(kv->key, key, keylen)==0)) {
+      if ((kv->hash==hash) && (kv->keylen==keylen) && (memcmp(kv->key, key, keylen)==0)) {
          return kv;
       }
       kv = kv->next;
@@ -131,7 +131,7 @@ _dict_expand(dict_t *d) {
 }
 
 void*
-dict_get(dict_t *d, const char *key, int keylen) {
+dict_get(dict_t *d, const void *key, int keylen) {
    if  (d && key && keylen>0) {
       dict_kv_t *kv = _dict_get_kv(d, key, keylen, NULL);
       if (kv) {
@@ -144,7 +144,7 @@ dict_get(dict_t *d, const char *key, int keylen) {
 /* return 1 when success stored
  */
 int
-dict_set(dict_t *d, const char *key, int keylen, void *value) {
+dict_set(dict_t *d, const void *key, int keylen, void *value) {
    if (d && key && keylen>0 && value) {
       uint32_t hash = 0;
       dict_kv_t *kv = _dict_get_kv(d, key, keylen, &hash);
@@ -165,8 +165,8 @@ dict_set(dict_t *d, const char *key, int keylen, void *value) {
          kv->value = value;
          kv->keylen = keylen;
 
-         kv->key = (char*)(((unsigned char*)kv) + sizeof(*kv));
-         strncpy(kv->key, key, keylen);
+         kv->key = (((unsigned char*)kv) + sizeof(*kv));
+         memcpy(kv->key, key, keylen);
 
          _dict_update_index(d, kv);
          d->count++;
@@ -177,7 +177,7 @@ dict_set(dict_t *d, const char *key, int keylen, void *value) {
 }
 
 void*
-dict_remove(dict_t *d, const char *key, int keylen) {
+dict_remove(dict_t *d, const void *key, int keylen) {
    if (d && key && keylen) {
       dict_kv_t *rkv = _dict_get_kv(d, key, keylen, NULL);
       if (rkv) {
