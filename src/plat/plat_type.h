@@ -5,7 +5,9 @@
  * under the terms of the MIT license. See LICENSE for details.
  */
 
-#if defined(_WIN32) || defined(_WIN64)
+#include "plat_os.h"
+
+#ifdef PLAT_OS_WIN
 
 typedef long long int64_t;
 typedef unsigned long long uint64_t;
@@ -25,4 +27,4 @@ extern "C" {
 }
 #endif
 
-#endif
+#endif  /* PLAT_OS_WIN */

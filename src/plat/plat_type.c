@@ -5,11 +5,13 @@
  * under the terms of the MIT license. See LICENSE for details.
  */
 
-#include <ctype.h>
-#include <string.h>
+
 #include "plat_type.h"
 
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef PLAT_OS_WIN
+
+#include <ctype.h>
+#include <string.h>
 
 long long vs_atoll(const char *instr) {
    long long retval = 0;
