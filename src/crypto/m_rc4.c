@@ -9,7 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef _WIN32
+#include "plat_os.h"
+#ifdef PLAT_OS_WIN
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #else

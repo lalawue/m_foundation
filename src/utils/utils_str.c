@@ -16,7 +16,9 @@
 #include <ctype.h>
 #include <string.h>
 
-#if defined(_WIN32) || defined(_WIN64)
+#include "plat_os.h"
+
+#ifdef PLAT_OS_WIN
 #include "plat_type.h"
 #else
 #include <strings.h>

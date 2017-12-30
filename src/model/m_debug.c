@@ -6,7 +6,8 @@
  */
 #define _CRT_SECURE_NO_WARNINGS
 
-#if defined(_WIN32) || defined(_WIN64) 
+#include "plat_os.h"
+#ifdef PLAT_OS_WIN
 #include <windows.h>
 #else
 #define _XOPEN_SOURCE 500
@@ -106,7 +107,7 @@ void debug_raw(const char *fmt, ...) {
 
 /* micro second */
 int64_t debug_time(void) {
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef PLAT_OS_WIN
    FILETIME ft;
    int64_t t;
    GetSystemTimeAsFileTime(&ft);
@@ -140,7 +141,7 @@ debug_log(const char *mod, int level, const char *fname,
       }
 
       if (d->option & D_OPT_TIME) {
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef PLAT_OS_WIN
          int64_t tm = debug_time();
          fprintf(d->fp, "%u> ", tm);
 #else

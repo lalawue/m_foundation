@@ -22,7 +22,7 @@
 
 #define MTHRD_TH_COUNT (MTHRD_AUX + 1)
 
-#if defined(_WIN32)
+#ifdef PLAT_OS_WIN
 #include <windows.h>
 #include <process.h>
 typedef HANDLE thread_t;
@@ -31,7 +31,7 @@ typedef HANDLE thread_t;
 
 #else
 #include <pthread.h>
-#if defined(__APPLE__)
+#if defined(PLAT_OS_IOS) || defined(PLAT_OS_MAC)
 #include <dispatch/dispatch.h>
 #endif  /* __APPLE__ */
 
@@ -64,7 +64,7 @@ typedef struct {
    int suspend;
 } mthrd_t;
 
-#ifdef __APPLE__
+#if defined(PLAT_OS_IOS) || defined(PLAT_OS_MAC)
 dispatch_queue_t _m_queid[MTHRD_TH_COUNT];
 #endif
 
@@ -145,9 +145,9 @@ _mthrd_wrapper_func(THRD_PARAM_TYPE param)
    } /* while */
    m->running = 2; /* exit state 2 */
 
-#ifdef _WIN32
+#ifdef PLAT_OS_WIN
    _endthreadex(0);
-#elif defined(__APPLE__)
+#elif defined(PLAT_OS_IOS) || defined(PLAT_OS_MAC)
    if (gm->mode == MTHRD_MODE_POWER_LOW) {
       return NULL;
    } else {
@@ -174,11 +174,11 @@ int mthrd_init(int mode) {
          m->ready_lst = lst_create();
          m->free_lst = lst_create();
 
-#if defined(_WIN32)
+#ifdef PLAT_OS_WIN
          unsigned threadID;
          m->thid = (HANDLE)_beginthreadex(NULL,0,&_mthrd_wrapper_func,(void*)m,0,&threadID);
          _log("create win32 thread %p\n", m->thid);
-#elif defined(__APPLE__)
+#elif defined(PLAT_OS_MAC) || defined(PLAT_OS_IOS)
          if (gm->mode == MTHRD_MODE_POWER_LOW) {
             dispatch_queue_t _thread[MTHRD_TH_COUNT] = {
                dispatch_get_main_queue(),
@@ -196,7 +196,7 @@ int mthrd_init(int mode) {
 #else
          pthread_create(&m->thid, NULL, _mthrd_wrapper_func, m);
          _log("create pthread %p\n", &m->thid);
-#endif  /* _WIN32 */
+#endif  /* WIN */
       }
       gm->init = 1;
       return 1;
@@ -232,9 +232,9 @@ void mthrd_fini(void) {
 
          _unlock(m->lock_free);
 
-#if defined(_WIN32)
+#ifdef PLAT_OS_WIN
          CloseHandle(m->thid);
-#elif defined(__APPLE__)
+#elif defined(PLAT_OS_IOS) || defined(PLAT_OS_MAC)
          if (gm->mode == MTHRD_MODE_POWER_HIGH) {
             pthread_detach(m->thid);
          }

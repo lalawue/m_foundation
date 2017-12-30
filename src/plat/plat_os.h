@@ -9,21 +9,21 @@
 #import "TargetConditionals.h"
 
 #if TARGET_OS_IPHONE
-#define PLAT_OS_IOS
+#define PLAT_OS_IOS 1
 
 #elif TARGET_OS_MAC
-#define PLAT_OS_MAC
+#define PLAT_OS_MAC 1
 
 #endif  /* __APPLE__ */
 
 #elif defined(_WIN32) || defined(_WIN64)
-#define PLAT_OS_WIN
+#define PLAT_OS_WIN 1
 
 #elif defined(__linux__)
-#define PLAT_OS_LINUX
+#define PLAT_OS_LINUX 1
 
 #elif defined(__FreeBSD__)
-#define PLAT_OS_FREEBSD
+#define PLAT_OS_FREEBSD 1
 
 #endif
 

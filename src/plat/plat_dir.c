@@ -12,7 +12,8 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#ifdef _WIN32
+#include "plat_os.h"
+#ifdef PLAT_OS_WIN
 #include <direct.h> 
 #include <io.h>
 #else
@@ -45,7 +46,7 @@ _destroy_dir_entry(mdir_entry_t *d) {
    }
 }
 
-#ifdef _WIN32
+#ifdef PLAT_OS_WIN
 typedef struct _stat stat_t;
 #define S_IFMT _S_IFMT
 #define S_IFDIR _S_IFDIR
@@ -59,7 +60,7 @@ typedef struct stat stat_t;
 int
 mdir_stat(const char *path, uint64_t *fsize, int *ftype) {
    stat_t st;
-#ifdef _WIN32
+#ifdef PLAT_OS_WIN
    char tmp[MDIR_MAX_PATH] = {0}, fpath[MDIR_MAX_PATH] = {0};
    charset_to_sysm(path, tmp, MDIR_MAX_PATH, fpath, MDIR_MAX_PATH);
    path = (const char*)fpath;
@@ -92,7 +93,7 @@ _mdir_destroy_lst(lst_t *lst) {
 }
 
 struct s_mdir {
-#ifdef _WIN32
+#ifdef PLAT_OS_WIN
    int fh;
    struct _finddata_t fdata;
 #else
@@ -116,7 +117,7 @@ mdir_open(const char *dir_path) {
       d = (mdir_t*)mm_malloc(sizeof(*d));
       if (d == NULL) { break; };
 
-#ifdef _WIN32
+#ifdef PLAT_OS_WIN
       char tmp[MDIR_MAX_PATH]={0}, fname[MDIR_MAX_PATH]={0};
       int len = charset_to_sysm(dir_path, tmp, MDIR_MAX_PATH, fname, MDIR_MAX_PATH);
       strcat(fname, "*.*");
@@ -152,7 +153,7 @@ mdir_list(mdir_t *d, int count) {
    if ( d->lst ) _mdir_destroy_lst(d->lst);
 
    lst_t *lst = lst_create();
-#ifdef _WIN32   /* ignore cound */
+#ifdef PLAT_OS_WIN   /* ignore cound */
    int fnext=1, i=0;
    char tmp[MDIR_MAX_PATH]={0}, fname[MDIR_MAX_PATH]={0};
    if ( !first_list ) { fnext=_findnext(d->fh, &d->fdata); i++; }
@@ -206,7 +207,7 @@ mdir_list(mdir_t *d, int count) {
 void
 mdir_close(mdir_t *d) {
    if ( d ) {
-#ifdef _WIN32
+#ifdef PLAT_OS_WIN
       _findclose(d->fh);
 #else
       closedir(d->dirp);
@@ -223,7 +224,7 @@ mdir_close(mdir_t *d) {
 char* 
 mdir_getcwd(char *path_out, int out_len) {
    char *path = NULL;
-#ifdef _WIN32
+#ifdef PLAT_OS_WIN
    path = _getcwd(path_out, out_len);
 #else
    path = getcwd(path_out, out_len);
@@ -232,7 +233,7 @@ mdir_getcwd(char *path_out, int out_len) {
 }
 
 char* mdir_path_slash(char *path) {
-#ifdef _WIN32
+#ifdef PLAT_OS_WIN
    if (path) {
       char *c = path;
       for (int i=0; c[i]; i++) {

@@ -10,7 +10,8 @@
 
 /* simple atomic thread-safe lock, init to '0' */
 
-#if defined(_WIN32) || defined(_WIN64)
+#include "plat_os.h"
+#ifdef PLAT_OS_WIN
 #include <windows.h>
 
 typedef long lock_t;
