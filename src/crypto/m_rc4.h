@@ -8,6 +8,11 @@
 #ifndef M_RC4_H
 #define M_RC4_H
 
+#ifdef __cplusplus
+extern {
+#endif
+
+
 #include <time.h>
 #include <stdint.h>
 
@@ -17,5 +22,10 @@ uint64_t rc4_hash_key(const char * str, int sz);
 
 int rc4_encrypt(const char *in, int in_sz, char *out, int out_sz, uint64_t key, time_t ti);
 int rc4_decrypt(const char *in, int in_sz, char *out, int out_sz, uint64_t key, time_t ti);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

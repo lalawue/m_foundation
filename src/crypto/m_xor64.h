@@ -8,11 +8,23 @@
 #ifndef _XOR64_H
 #define _XOR64_H
 
+#ifdef __cplusplus
+extern {
+#endif
+
+
+
 #include <stdint.h>
 
 #define XOR64_CHECKSUM_SIZE 8 /* bytes */
 
 int xor64_checksum_gen(uint8_t *buf, int len, uint8_t *checksum);
 int xor64_checksum_check(uint8_t *buf, int len, uint8_t *checksum);
+
+
+#ifdef __cplusplus
+}
+#endif
+   
 
 #endif
