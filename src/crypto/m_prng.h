@@ -8,6 +8,11 @@
 #ifndef _PRNG_H
 #define _PRNG_H
 
+#ifdef __cplusplus
+extern {
+#endif
+
+
 #include <stdint.h>
 
 typedef struct {
@@ -18,6 +23,12 @@ typedef struct {
 int prng_init(prng_t*);
 
 uint64_t prng_next(prng_t*);
+
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif
