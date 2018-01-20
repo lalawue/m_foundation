@@ -2,7 +2,7 @@
 CC=gcc
 CFLAGS= -Wall -std=c99 -Wdeprecated-declarations
 
-DEBUG= -g
+DEBUG=
 RELEASE= -O2
 
 LIBS= -lc

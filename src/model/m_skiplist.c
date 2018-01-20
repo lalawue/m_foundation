@@ -44,6 +44,24 @@ _newNodeOfLevel(int level) {
    return (skt_node_t*)mm_malloc(sizeof(skt_node_t) + level*sizeof(skt_node_t*));
 }
 
+static inline int
+_randomLevel(skt_t *lst) {
+   int level = 0;
+   int b;
+   do {
+      b = lst->randomBits & 3;  /* 25% */
+      if (!b) {
+         level++;
+      }
+      lst->randomBits>>=2;
+      if (--lst->randomsLeft == 0) {
+         lst->randomBits = prng_next(&lst->rng);
+         lst->randomsLeft = kBitsInRandom/2;
+      }
+   } while (!b);
+   return (level > kMaxLevel ? kMaxLevel : level);
+}
+
 skt_t*
 skt_create(void) {
    skt_t *lst = (skt_t*)mm_malloc(sizeof(*lst));
@@ -68,46 +86,22 @@ skt_create(void) {
    return lst;
 }
 
-static void
-_skt_loop_list_with_callback(skt_t *lst, skt_callback cb, int free_node) {
-   skt_node_t *p, *q;   
-   p = lst->header;
-   do {
-      q = p->forward[0];
-      if (cb) {
-         cb(p->key, p->value);
-      }
-      if (free_node) {
-         mm_free(p);
-      }
-      p = q;
-   } while (p != lst->NIL);   
-}
 
 void
 skt_destroy(skt_t *lst, skt_callback cb) {
    if (lst) {
-      _skt_loop_list_with_callback(lst, cb, 1);
+      skt_node_t *q, *p = lst->header;
+      do {
+         q = p->forward[0];
+         if (cb && (p!=lst->NIL)) {
+            cb(p->key, p->value);
+         }
+         mm_free(p);
+         p = q;
+      } while (p != lst->NIL);
       mm_free(lst->NIL);
       mm_free(lst);
    }
-}
-
-int _randomLevel(skt_t *lst) {
-   int level = 0;
-   int b;
-   do {
-      b = lst->randomBits & 3;  /* 25% */
-      if (!b) {
-         level++;
-      }
-      lst->randomBits>>=2;
-      if (--lst->randomsLeft == 0) {
-         lst->randomBits = prng_next(&lst->rng);
-         lst->randomsLeft = kBitsInRandom/2;
-      }
-   } while (!b);
-   return (level > kMaxLevel ? kMaxLevel : level);
 }
 
 int
@@ -151,11 +145,12 @@ skt_insert(skt_t *lst, uint32_t key, void *value) {
    return 0;
 }
 
-int 
+void*
 skt_remove(skt_t *lst, uint32_t key) {
    int k,m;
    skt_node_t *update[kMaxNumberOfLevels];
    skt_node_t *p, *q;
+   void *ret_value = NULL;
 
    if (lst) {
       p = lst->header;
@@ -171,16 +166,16 @@ skt_remove(skt_t *lst, uint32_t key) {
          for (k=0; k<=m && (p=update[k])->forward[k] == q; k++) {
             p->forward[k] = q->forward[k];
          }
+         ret_value = q->value;
          mm_free(q);
          while (lst->header->forward[m]==lst->NIL && m>0) {
             m--;
          }
          lst->level = m;
          lst->count -= 1;
-         return 1;
       }
    }
-   return 0;
+   return ret_value;
 }
 
 void*
@@ -208,7 +203,14 @@ skt_query(skt_t *lst, uint32_t key) {
 void
 skt_foreach(skt_t *lst, skt_callback cb) {
    if (lst && cb) {
-      _skt_loop_list_with_callback(lst, cb, 0);
+      skt_node_t *q, *p = lst->header;
+      do {
+         q = p->forward[0];
+         if (p!=lst->NIL && !cb(p->key, p->value)) {
+            break;
+         }
+         p = q;
+      } while (p != lst->NIL);      
    }
 }
 

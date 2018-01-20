@@ -15,17 +15,23 @@ extern "C" {
 #include <stdint.h>
 
 typedef struct s_skt skt_t;
-typedef void (*skt_callback)(int key, void *value);
+
+/* return 0 to stop, ignore in destroy */   
+typedef int (*skt_callback)(int key, void *value);
+   
 
 skt_t* skt_create(void);
 void skt_destroy(skt_t *lst, skt_callback cb);
+   
 
 void* skt_query(skt_t *lst, uint32_t key);
-int   skt_insert(skt_t *lst, uint32_t key, void *value);
-int   skt_remove(skt_t *lst, uint32_t key);
+int skt_insert(skt_t *lst, uint32_t key, void *value);
+void* skt_remove(skt_t *lst, uint32_t key);
+   
 
-void  skt_foreach(skt_t *lst, skt_callback cb);
-int   skt_count(skt_t *lst);
+void skt_foreach(skt_t *lst, skt_callback cb);
+   
+int skt_count(skt_t *lst);
 
 #ifdef __cplusplus
 }
