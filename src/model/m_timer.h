@@ -18,21 +18,8 @@ extern "C" {
 
 typedef void (*tmr_callback)(void*);
 
-
-typedef struct {
-   int64_t last_ms;
-   lst_t *timer_lst;
-} tmr_t;
-
-
-typedef struct {
-   int64_t fire_ms;
-   int64_t interval_ms;
-   unsigned char repeat;
-   tmr_callback cb;
-   void *opaque;
-   void *node;
-} tmr_timer_t;
+typedef struct s_tmr tmr_t;
+typedef struct s_tmr_timer tmr_timer_t;   
 
 
 

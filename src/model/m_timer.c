@@ -10,26 +10,51 @@
 #include "m_mem.h"
 #include "plat_time.h"
 
+struct s_tmr {
+   int64_t first_ms;            /* first fire date */
+   lst_t *timer_lst;
+};
+
+struct s_tmr_timer {
+   
+   int64_t fire_ms;             /* fire date */
+   int64_t interval_ms;         /* interval */
+   
+   unsigned char repeat;        /* repeat mode */
+   tmr_callback cb;             /* call back */
+   
+   void *opaque;                /* user data */
+   void *node;                  /* node in list */
+};
+
+
 tmr_t*
 tmr_create_lst(void) {
+   
    tmr_t *tmr = mm_malloc(sizeof(*tmr));
    if (tmr) {
-      tmr->last_ms = 0;
+      
       tmr->timer_lst = lst_create();      
    }
    return tmr;
 }
 
+
 void
 tmr_destroy_lst(tmr_t *tmr) {
+   
    if (tmr) {
+      
       while (lst_count(tmr->timer_lst) > 0) {
+         
          mm_free(lst_popf(tmr->timer_lst));
       }
+      
       lst_destroy(tmr->timer_lst);
       mm_free(tmr);
    }
 }
+
 
 void
 tmr_update_lst(tmr_t *tmr) {
@@ -39,15 +64,11 @@ tmr_update_lst(tmr_t *tmr) {
    }
 
    int64_t current = mtime_current();
-   tmr_timer_t *c = lst_first(tmr->timer_lst);
 
-   // check the first timer with current time
-   if ((tmr->last_ms + c->interval_ms) > current) {
+   // check first fire date
+   if (ls->fire_ms && ls->fire_ms>current) {
       return;
    }
-
-   // save last active time
-   tmr->last_ms = current;
 
    // check timer in list, break when fire date not reached
    lst_foreach(it, tmr->timer_lst) {
@@ -59,47 +80,45 @@ tmr_update_lst(tmr_t *tmr) {
          c->cb(c->opaque);
                
          if ( !c->repeat ) {
+            
             lst_iter_remove(it);
             mm_free(c);
          }
       }
       else {
-         break;
+         if (!ls->fire_ms || ls->fire_ms>c->fire_ms) {
+            ls->fire_ms = c->fire_ms;
+         }
       }
-            
    }
+   
 }
 
 
 tmr_timer_t*
 tmr_add(tmr_t *tmr, int64_t interval_ms, int repeat, void *opaque, tmr_callback cb) {
-   tmr_timer_t *n = NULL;
+   
    if (tmr && cb) {
-      n = mm_malloc(sizeof(*n));
+      
+      tmr_timer_t *n = mm_malloc(sizeof(*n));
+      
       n->fire_ms = mtime_current() + interval_ms;
       n->interval_ms = interval_ms;
+      
       n->repeat = repeat;
       n->opaque = opaque;
+      
       n->cb = cb;
 
-      tmr_timer_t *c = lst_last(tmr->timer_lst);
+      n->node = lst_pushl(tmr->timer_lst, n);
 
-      // push to last if it was the largest interval in list
-      if (c->interval_ms < interval_ms) {
-         n->node = lst_pushl(tmr->timer_lst, n);
+      if (!lst->fire_ms || n->fire_ms<lst->fire_ms) {
+         lst->fire_ms = n->fire_ms;
       }
-      else {
-         // small come first
-         lst_foreach(it, tmr->timer_lst) {
-            c = lst_iter_data(it);
-            if (c->interval_ms >= interval_ms) {
-               n->node = lst_iter_insert_prev(tmr->timer_lst, it, n);
-               break;
-            }
-         }         
-      }
+      
+      return n;
    }
-   return n;
+   return NULL;
 }
 
 
@@ -110,6 +129,10 @@ tmr_fire(tmr_t *tmr, tmr_timer_t *timer, int run_callback) {
       
       if (run_callback) {
          timer->cb(timer->opaque);
+      }
+
+      if (lst->fire_ms == timer->fire_ms) {
+         lst->fire_ms = 0;
       }
       
       if ( !timer->repeat ) {
@@ -125,7 +148,13 @@ tmr_fire(tmr_t *tmr, tmr_timer_t *timer, int run_callback) {
 
 void
 tmr_invalidate(tmr_t *tmr, tmr_timer_t *timer) {
+   
    if (tmr && timer) {
+
+      if (lst->fire_ms == timer->fire_ms) {
+         lst->fire_ms = 0;
+      }
+      
       lst_remove(tmr->timer_lst, timer->node);
       mm_free(timer);
    }
