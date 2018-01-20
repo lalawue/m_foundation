@@ -25,7 +25,7 @@ void skt_destroy(skt_t *lst, skt_callback cb);
    
 
 void* skt_query(skt_t *lst, uint32_t key);
-int skt_insert(skt_t *lst, uint32_t key, void *value);
+void* skt_insert(skt_t *lst, uint32_t key, void *value);
 void* skt_remove(skt_t *lst, uint32_t key);
    
 

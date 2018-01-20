@@ -104,7 +104,11 @@ skt_destroy(skt_t *lst, skt_callback cb) {
    }
 }
 
-int
+/* if key exist, return original value;
+ * return new value when success
+ * return NULL for other error
+ */
+void*
 skt_insert(skt_t *lst, uint32_t key, void *value) {
    int k;
    skt_node_t *p,*q;
@@ -121,8 +125,7 @@ skt_insert(skt_t *lst, uint32_t key, void *value) {
       } while(--k >= 0);
 
       if (q->key == key) {
-         //q->value = value;
-         return 0;
+         return q->value;
       }
 
       k = _randomLevel(lst);
@@ -140,9 +143,9 @@ skt_insert(skt_t *lst, uint32_t key, void *value) {
       } while(--k >= 0);
 
       lst->count += 1;
-      return 1;
+      return value;
    }
-   return 0;
+   return NULL;
 }
 
 void*
