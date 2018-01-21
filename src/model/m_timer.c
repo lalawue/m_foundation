@@ -6,19 +6,20 @@
  */
 
 #include <stdio.h>
-#include "m_timer.h"
 #include "m_mem.h"
-#include "plat_time.h"
+#include "m_list.h"
+#include "m_timer.h"
+
 
 struct s_tmr {
-   int64_t first_ms;            /* first fire date */
+   int64_t first_ti;            /* first fire date */
    lst_t *timer_lst;
 };
 
 struct s_tmr_timer {
    
-   int64_t fire_ms;             /* fire date */
-   int64_t interval_ms;         /* interval */
+   int64_t fire_ti;             /* fire date */
+   int64_t interval_ti;         /* interval */
    
    unsigned char repeat;        /* repeat mode */
    tmr_callback cb;             /* call back */
@@ -31,7 +32,7 @@ struct s_tmr_timer {
 tmr_t*
 tmr_create_lst(void) {
    
-   tmr_t *tmr = mm_malloc(sizeof(*tmr));
+   tmr_t *tmr = (tmr_t*)mm_malloc(sizeof(*tmr));
    if (tmr) {
       
       tmr->timer_lst = lst_create();      
@@ -56,54 +57,73 @@ tmr_destroy_lst(tmr_t *tmr) {
 }
 
 
+static inline void
+_update_first_ti(tmr_t *tmr, int64_t fire_ti) {
+   if (lst_count(tmr->timer_lst) <= 0) {
+      tmr->first_ti = 0;
+   }
+   else if (!tmr->first_ti || (tmr->first_ti > fire_ti)) {
+      tmr->first_ti = fire_ti;
+   }
+}
+
+
 void
-tmr_update_lst(tmr_t *tmr) {
+tmr_update_lst(tmr_t *tmr, int64_t current_ti) {
    
    if (tmr==NULL || lst_count(tmr->timer_lst)<=0) {
       return;
    }
 
-   int64_t current = mtime_current();
-
    // check first fire date
-   if (ls->fire_ms && ls->fire_ms>current) {
+   if (tmr->first_ti && (tmr->first_ti > current_ti)) {
       return;
    }
 
-   // check timer in list, break when fire date not reached
+   // get the max
+   int64_t first_ti = ((tmr_timer_t*)lst_last(tmr->timer_lst))->fire_ti;
+
+   // check timer in list
    lst_foreach(it, tmr->timer_lst) {
-      c = lst_iter_data(it);
+      tmr_timer_t *c = lst_iter_data(it);
             
-      if (c->fire_ms <= current) {
+      if (c->fire_ti <= current_ti) {
                
-         c->fire_ms = current + c->interval_ms;
+         c->fire_ti = current_ti + c->interval_ti;
          c->cb(c->opaque);
                
          if ( !c->repeat ) {
-            
+
             lst_iter_remove(it);
             mm_free(c);
+            continue;
          }
       }
-      else {
-         if (!ls->fire_ms || ls->fire_ms>c->fire_ms) {
-            ls->fire_ms = c->fire_ms;
-         }
+
+      // get the min
+      if (first_ti > c->fire_ti) {
+         first_ti = c->fire_ti;
       }
    }
-   
+
+   _update_first_ti(tmr, first_ti);
 }
 
 
 tmr_timer_t*
-tmr_add(tmr_t *tmr, int64_t interval_ms, int repeat, void *opaque, tmr_callback cb) {
-   
+tmr_add(tmr_t *tmr,
+        int64_t current_ti,
+        int64_t interval_ti,
+        int repeat,
+        void *opaque,
+        tmr_callback cb)
+{
    if (tmr && cb) {
       
       tmr_timer_t *n = mm_malloc(sizeof(*n));
       
-      n->fire_ms = mtime_current() + interval_ms;
-      n->interval_ms = interval_ms;
+      n->fire_ti = current_ti + interval_ti;
+      n->interval_ti = interval_ti;
       
       n->repeat = repeat;
       n->opaque = opaque;
@@ -112,10 +132,7 @@ tmr_add(tmr_t *tmr, int64_t interval_ms, int repeat, void *opaque, tmr_callback 
 
       n->node = lst_pushl(tmr->timer_lst, n);
 
-      if (!lst->fire_ms || n->fire_ms<lst->fire_ms) {
-         lst->fire_ms = n->fire_ms;
-      }
-      
+      _update_first_ti(tmr, n->fire_ti);
       return n;
    }
    return NULL;
@@ -123,39 +140,42 @@ tmr_add(tmr_t *tmr, int64_t interval_ms, int repeat, void *opaque, tmr_callback 
 
 
 void
-tmr_fire(tmr_t *tmr, tmr_timer_t *timer, int run_callback) {
-   
-   if (tmr && timer) {
+tmr_fire(tmr_t *tmr,
+         tmr_timer_t *c,
+         int64_t ti,
+         int run_callback)
+{
+   if (tmr && c) {
       
       if (run_callback) {
-         timer->cb(timer->opaque);
+         c->cb(c->opaque);
       }
 
-      if (lst->fire_ms == timer->fire_ms) {
-         lst->fire_ms = 0;
+      if (tmr->first_ti == c->fire_ti) {
+         tmr->first_ti = 0;
       }
       
-      if ( !timer->repeat ) {
-         lst_remove(tmr->timer_lst, timer->node);
-         mm_free(timer);
+      if ( !c->repeat ) {
+         lst_remove(tmr->timer_lst, c->node);
+         mm_free(c);
          return;
       }
 
-      timer->fire_ms = mtime_current() + timer->interval_ms;      
+      c->fire_ti = ti + c->interval_ti;
    }
 }
 
 
 void
-tmr_invalidate(tmr_t *tmr, tmr_timer_t *timer) {
+tmr_invalidate(tmr_t *tmr, tmr_timer_t *c) {
    
-   if (tmr && timer) {
+   if (tmr && c) {
 
-      if (lst->fire_ms == timer->fire_ms) {
-         lst->fire_ms = 0;
+      if (tmr->first_ti == c->fire_ti) {
+         tmr->first_ti = 0;
       }
       
-      lst_remove(tmr->timer_lst, timer->node);
-      mm_free(timer);
+      lst_remove(tmr->timer_lst, c->node);
+      mm_free(c);
    }
 }

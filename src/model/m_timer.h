@@ -13,10 +13,9 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include "m_list.h"
 
 
-typedef void (*tmr_callback)(void*);
+typedef void (*tmr_callback)(void *opaque);
 
 typedef struct s_tmr tmr_t;
 typedef struct s_tmr_timer tmr_timer_t;   
@@ -27,15 +26,23 @@ tmr_t* tmr_create_lst(void);
 
 void tmr_destroy_lst(tmr_t*);
 
-// loop timer list and fire
-void tmr_update_lst(tmr_t*);
+// input current time unit, and check timers' fire date
+void tmr_update_lst(tmr_t*, int64_t current_ti);
 
 
 
 
-tmr_timer_t* tmr_add(tmr_t*, int64_t interval_ms, int repeat, void *opaque, tmr_callback cb);
+tmr_timer_t* tmr_add(tmr_t*,
+                     int64_t current_ti,  /* current time unit */
+                     int64_t interval_ti, /* interval time unit */
+                     int repeat,          /* repeat mode */
+                     void *opaque,        /* user data */
+                     tmr_callback cb);    /* timer callback */
 
-void tmr_fire(tmr_t*, tmr_timer_t*, int run_callback);
+void tmr_fire(tmr_t*,
+              tmr_timer_t*,
+              int64_t current_ti, /* current time unit */
+              int run_callback);  /* wether run callback */
 
 // remove timer from list
 void tmr_invalidate(tmr_t*, tmr_timer_t*);
