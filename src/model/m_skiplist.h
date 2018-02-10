@@ -14,6 +14,7 @@ extern "C" {
 
 #include <stdint.h>
 
+#define SKT_KEY_MASK (0x7fffffff)
 
 typedef struct s_skt skt_t;
 

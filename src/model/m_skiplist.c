@@ -69,7 +69,7 @@ skt_create(void) {
       prng_init(&lst->rng);
       
       lst->tail = _newNodeOfLevel(0);
-      lst->tail->key = 0x7fffffff;
+      lst->tail->key = SKT_KEY_MASK;
       
       lst->randomBits = prng_next(&lst->rng);
       lst->randomsLeft = kBitsInRandom / 2;
@@ -130,13 +130,12 @@ skt_query(skt_t *lst, uint32_t key) {
 }
 
    
-/* if key exist, return original value
- * return new value when success
- * return NULL for other error
+/* return new value when success
+ * return NULL when key exist or other error
  */
 void*
 skt_insert(skt_t *lst, uint32_t key, void *value) {
-   if (lst) {
+   if (lst && key>0 && key<SKT_KEY_MASK && value) {
       int k;
       skt_node_t *p, *next;
       skt_node_t *update[kMaxNumberOfLevels];   
@@ -151,7 +150,7 @@ skt_insert(skt_t *lst, uint32_t key, void *value) {
       } while(--k >= 0);
 
       if (next->key == key) {
-         return next->value;
+         return NULL;
       }
 
       k = _randomLevel(lst);
@@ -176,7 +175,7 @@ skt_insert(skt_t *lst, uint32_t key, void *value) {
 void*
 skt_remove(skt_t *lst, uint32_t key) {
    void *ret_value = NULL;
-   if (lst) {
+   if (lst && key>0 && key<SKT_KEY_MASK) {
       int k, m;
       skt_node_t *p, *next;
       skt_node_t *update[kMaxNumberOfLevels];      
