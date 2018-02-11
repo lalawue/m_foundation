@@ -11,6 +11,12 @@
 #include "plat_os.h"
 #include "m_prng.h"
 #include <stdio.h>
+#if defined(PLAT_OS_WIN)
+#include <windows.h>
+#include <windef.h>
+#include <wincrypt.h>
+#pragma comment(lib, "Advapi32.lib")
+#endif
 
 
 int
