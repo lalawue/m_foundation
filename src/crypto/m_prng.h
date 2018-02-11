@@ -9,7 +9,7 @@
 #define _PRNG_H
 
 #ifdef __cplusplus
-extern {
+extern "C" {
 #endif
 
 

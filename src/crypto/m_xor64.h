@@ -9,7 +9,7 @@
 #define _XOR64_H
 
 #ifdef __cplusplus
-extern {
+extern "C" {
 #endif
 
 

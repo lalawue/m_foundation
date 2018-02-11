@@ -27,7 +27,7 @@
 #define _MD5_H
 
 #ifdef __cplusplus
-extern {
+extern "C" {
 #endif
 
    

@@ -9,7 +9,7 @@
 #define M_RC4_H
 
 #ifdef __cplusplus
-extern {
+extern "C" {
 #endif
 
 
