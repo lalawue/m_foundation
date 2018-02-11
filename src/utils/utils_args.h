@@ -12,6 +12,8 @@
 extern "C" {
 #endif
 
+#define UTILS_ARGS_INVALID_INTEGER 0x7fffffff
+
 
 typedef struct s_args args_t;
 

@@ -59,7 +59,7 @@ utils_args_integer(args_t *args, const char *param) {
          return atol(args->params[index]);
       }
    }
-   return 0;                    /* caution */
+   return UTILS_ARGS_INVALID_INTEGER; /* caution */
 }
 
 const char*
