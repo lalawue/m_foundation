@@ -65,14 +65,14 @@ tmr_update_lst(tmr_t *tmr, int64_t current_ti) {
    }
 
    // check first fire date
-   tmr_timer_t *ti = skt_first(tmr->timer_lst);
+   tmr_timer_t *ti = (tmr_timer_t*)skt_first(tmr->timer_lst);
    if (ti->fire_ti > current_ti) {
       return;
    }
 
    // check timer in list
    while (skt_count(tmr->timer_lst) > 0) {
-      tmr_timer_t *c = skt_popf(tmr->timer_lst);
+      tmr_timer_t *c = (tmr_timer_t*)skt_popf(tmr->timer_lst);
 
       if (c->fire_ti <= current_ti) {
 
@@ -106,7 +106,7 @@ tmr_add(tmr_t *tmr,
 {
    if (tmr && cb) {
       
-      tmr_timer_t *n = mm_malloc(sizeof(*n));
+      tmr_timer_t *n = (tmr_timer_t*)mm_malloc(sizeof(*n));
       
       n->fire_ti = current_ti + interval_ti;
       n->interval_ti = interval_ti;
