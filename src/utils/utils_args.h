@@ -23,7 +23,7 @@ long
 utils_args_integer(args_t*, const char *param);
    
 const char*
-uilts_args_string(args_t*, const char *param);
+utils_args_string(args_t*, const char *param);
 
 
 #ifdef __cplusplus

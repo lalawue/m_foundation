@@ -63,7 +63,7 @@ utils_args_integer(args_t *args, const char *param) {
 }
 
 const char*
-uilts_args_string(args_t *args, const char *param) {
+utils_args_string(args_t *args, const char *param) {
    if (args && param) {
       int index = _find_args(args, param);
       if (index >= 0) {
