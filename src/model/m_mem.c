@@ -12,7 +12,9 @@
 #include <assert.h>
 #include "plat_lock.h"
 #include "m_mem.h"
+#include "mfoundation_import.h"
 
+#if M_FOUNDATION_IMPORT_MODEL_MEM
 
 #define _log(...) printf(__VA_ARGS__)
 
@@ -183,3 +185,5 @@ void mm_report(int brief_level) {
   report_end:
    _unlock(mh->lock);
 }
+
+#endif  // M_FOUNDATION_IMPORT_MODEL_MEM

@@ -25,6 +25,9 @@
 #include "plat_dir.h"
 #include "plat_charset.h"
 #include <assert.h>
+#include "mfoundation_import.h"
+
+#if M_FOUNDATION_IMPORT_PLAT_DIR
 
 #define _err(...) _mlog("dir", D_ERROR, __VA_ARGS__)
 #define _log(...) _mlog("dir", D_INFO, __VA_ARGS__)
@@ -273,3 +276,5 @@ int main(int argc, char *argv[]) {
    return 0;
 }
 #endif
+
+#endif // M_FOUNDATION_IMPORT_PLAT_DIR

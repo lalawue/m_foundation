@@ -18,15 +18,15 @@
 #endif
 
 #include "m_rc4.h"
-#include "m_debug.h"
+#include "mfoundation_import.h"
+
+#if M_FOUNDATION_IMPORT_CRYPTO_RC4
 
 /* fromo cloudwu's https://github.com/cloudwu/mptun/blob/master/mptun.c */
 
 #ifndef DEF_TIME_DIFF
 #define DEF_TIME_DIFF 1800
 #endif
-
-#define _err(...) _mlog("crypto", D_ERROR, __VA_ARGS__)
 
 struct rc4_sbox {
    int i;
@@ -157,8 +157,7 @@ rc4_encrypt(const char *in, int in_sz, char *out, int out_sz, uint64_t key, time
    uint32_t tmp;
    struct rc4_sbox rs;
    if (in_sz > out_sz - RC4_CRYPTO_OCCUPY) {
-      _err("insufficient out buffer size %d\n", out_sz);
-      return -1;
+      return RC4_ERR_INSUFFICIENT_OUT_BUFFER_SIZE;
    }
    key = hmac(key, ti);
    rc4_init(&rs, key);
@@ -179,8 +178,7 @@ rc4_decrypt(const char *in, int in_sz, char *out, int out_sz, uint64_t key, time
    struct rc4_sbox rs;
    in_sz -= RC4_CRYPTO_OCCUPY;
    if (in_sz < 0 || out_sz < in_sz) {
-      _err("insufficient in buffer size %d\n", in_sz);
-      return -1;
+      return RC4_ERR_INSUFFICIENT_IN_BUFFER_SIZE;
    }
 
    memcpy(&pt, in, 4);
@@ -188,8 +186,7 @@ rc4_decrypt(const char *in, int in_sz, char *out, int out_sz, uint64_t key, time
    pt = ntohl(pt);
    check = ntohl(check);
    if (abs((int)(pt - ti)) > DEF_TIME_DIFF) {
-      _err("over time %d seconds\n", DEF_TIME_DIFF);
-      return -1;
+      return RC4_ERR_OVER_TIME_SECOND;
    }
    key = hmac(key, pt);
    rc4_init(&rs, key);
@@ -199,8 +196,9 @@ rc4_decrypt(const char *in, int in_sz, char *out, int out_sz, uint64_t key, time
    key ^= h;
 
    if (check != ((uint32_t)key ^ (uint32_t)(key >> 32))) {
-      _err("key invalid\n");
-      return -1;
+      return RC4_ERR_KEY_INVALID;
    }
    return in_sz;
 }
+
+#endif // M_FOUNDATION_IMPORT_CRYPTO_RC4

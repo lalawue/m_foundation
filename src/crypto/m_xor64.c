@@ -7,6 +7,9 @@
 
 #include <string.h>
 #include "m_xor64.h"
+#include "mfoundation_import.h"
+
+#if M_FOUNDATION_IMPORT_CRYPTO_XOR64
 
 static uint64_t
 _64bit_xor(uint8_t *buf, int bytes) {
@@ -89,4 +92,6 @@ main(int argc, char *argv[]) {
 
    return 0;
 }
-#endif //M_XOR64_TEST
+#endif  // M_XOR64_TEST
+
+#endif  // M_FOUNDATION_IMPORT_CRYPTO_XOR64

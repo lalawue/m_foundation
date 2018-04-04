@@ -9,7 +9,9 @@
 #include "m_mem.h"
 #include "m_skiplist.h"
 #include "m_timer.h"
+#include "mfoundation_import.h"
 
+#if M_FOUNDATION_IMPORT_MODEL_STM
 
 struct s_tmr {
    skt_t *timer_lst;
@@ -160,3 +162,5 @@ tmr_invalidate(tmr_t *tmr, tmr_timer_t *c) {
       mm_free(c);
    }
 }
+
+#endif  /* M_FOUNDATION_IMPORT_MODEL_STM */

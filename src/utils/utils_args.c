@@ -13,6 +13,9 @@
 #include "m_mem.h"
 #include "m_list.h"
 #include "utils_args.h"
+#include "mfoundation_import.h"
+
+#if M_FOUNDATION_IMPORT_UTILS_ARGS
 
 struct s_args {
    int count;
@@ -72,3 +75,5 @@ utils_args_string(args_t *args, const char *param) {
    }
    return NULL;
 }
+
+#endif  /* M_FOUNDATION_IMPORT_UTILS_ARGS */

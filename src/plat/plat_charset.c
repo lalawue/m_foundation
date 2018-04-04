@@ -10,6 +10,9 @@
 #include <windows.h>
 #include <direct.h> 
 #endif
+#include "mfoundation_import.h"
+
+#if M_FOUNDATION_IMPORT_PLAT_CHARSET
 
 int
 charset_to_prog(
@@ -33,3 +36,5 @@ charset_to_sysm(
    return 0;
 #endif
 }
+
+#endif  /* M_FOUNDATION_IMPORT_PLAT_CHARSET */

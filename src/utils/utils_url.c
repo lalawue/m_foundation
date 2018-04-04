@@ -12,6 +12,9 @@
 
 #include "m_mem.h"
 #include "utils_url.h"
+#include "mfoundation_import.h"
+
+#if M_FOUNDATION_IMPORT_UTILS_URL
 
 static unsigned char hexchars[] = "0123456789ABCDEF";
 
@@ -102,3 +105,5 @@ int url_decode(char *str, int len)
    *dest = 0;
    return (int)(dest - str);
 }
+
+#endif  // M_FOUNDATION_IMPORT_UTILS_URL

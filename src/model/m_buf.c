@@ -11,6 +11,9 @@
 
 #include "m_buf.h"
 #include "m_mem.h"
+#include "mfoundation_import.h"
+
+#if M_FOUNDATION_IMPORT_MODEL_BUF
 
 buf_t* buf_create_ex(int len, char *fname, int line) {
    if (len > 0) {
@@ -63,3 +66,5 @@ void buf_debug(buf_t *b) {
       printf("[buf] b:%p, len:%d, ptw:%d\n", b, b->buf_len, b->ptw);
    }
 }
+
+#endif // M_FOUNDATION_IMPORT_MODEL_BUF

@@ -28,7 +28,10 @@
 #include "m_debug.h"
 
 #include "utils_str.h"
+#include "mfoundation_import.h"
 #include <assert.h>
+
+#if M_FOUNDATION_IMPORT_UTILS_STR
 
 #define _err(...) _mlog("ustr", D_ERROR, __VA_ARGS__)
 #define _info(...) _mlog("ustr", D_INFO, __VA_ARGS__)
@@ -910,3 +913,5 @@ int main(int argc, char *argv[])
 
 /* gcc -g -Wall -I../plat -I../model ../model/m_mem.c ../model/m_debug.c utils_str.c -DTEST_UTILS_STR */
 #endif
+
+#endif  /* M_FOUNDATION_IMPORT_UTILS_STR */

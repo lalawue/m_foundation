@@ -10,6 +10,9 @@
 
 #include "m_mem.h"
 #include "m_list.h"
+#include "mfoundation_import.h"
+
+#if M_FOUNDATION_IMPORT_MODEL_LIST
 
 #define M_FREE_NODE_RESERVE 1  /* 0 for disable free node list */
 
@@ -261,3 +264,5 @@ lst_node_t* lst_iter_insert_prev(lst_t *lst, lst_iter_t *it, void *data) {
    }
    return NULL;
 }
+
+#endif  // M_FOUNDATION_IMPORT_MODEL_LIST

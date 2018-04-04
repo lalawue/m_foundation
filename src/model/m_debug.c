@@ -21,7 +21,9 @@
 #include <time.h>
 #include <assert.h>
 #include "m_debug.h"
-#include "plat_type.h"
+#include "mfoundation_import.h"
+
+#if M_FOUNDATION_IMPORT_MODEL_DEBUG
 
 typedef struct {
    int init;
@@ -176,3 +178,5 @@ debug_log(const char *mod, int level, const char *fname,
       }
    }
 }
+
+#endif  // M_FOUNDATION_IMPORT_MODEL_DEBUG

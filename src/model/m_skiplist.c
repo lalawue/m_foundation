@@ -16,6 +16,9 @@
 #include "m_mem.h"
 #include "m_skiplist.h"
 #include "m_prng.h"
+#include "mfoundation_import.h"
+
+#if M_FOUNDATION_IMPORT_MODEL_SKIPLIST
 
 #define kBitsInRandom 31
 #define kMaxNumberOfLevels 16
@@ -253,3 +256,5 @@ skt_iter_next(skt_t *lst, skt_iter_t *it) {
    }
    return NULL;
 }
+
+#endif  // M_FOUNDATION_IMPORT_MODEL_SKIPLIST

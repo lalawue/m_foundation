@@ -9,3 +9,5 @@
 # About
 
 m_foundation was a cross platform library, require C99.
+
+create your own mfoundation_import.h to import required module.

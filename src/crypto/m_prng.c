@@ -17,7 +17,9 @@
 #include <wincrypt.h>
 #pragma comment(lib, "Advapi32.lib")
 #endif
+#include "mfoundation_import.h"
 
+#if M_FOUNDATION_IMPORT_CRYPTO_PRNG
 
 int
 prng_init(prng_t *rng) {
@@ -80,3 +82,5 @@ prng_next(prng_t *rng) {
    }
    return 0;
 }
+
+#endif  /* M_FOUNDATION_IMPORT_CRYPTO_PRNG */

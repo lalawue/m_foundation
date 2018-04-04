@@ -14,8 +14,9 @@
 #include "plat_time.h"
 #include "plat_lock.h"
 #include "plat_thread.h"
+#include "mfoundation_import.h"
 
-#ifdef PLAT_THREAD
+#if M_FOUNDATION_IMPORT_PLAT_THREAD
 
 #define _err(...)  _mlog("thrd", D_ERROR, __VA_ARGS__)
 #define _log(...)  _mlog("thrd", D_INFO, __VA_ARGS__)
@@ -38,7 +39,7 @@ typedef HANDLE thread_t;
 typedef pthread_t thread_t;
 #define THRD_RET_TYPE void*
 #define THRD_PARAM_TYPE void*
-#endif
+#endif  /* PLAT_OS_WIN */
 
 typedef struct {
    mthread_func func;
@@ -301,4 +302,5 @@ int mthrd_is_running(int th_type) {
    }
    return 0;
 }
-#endif
+
+#endif // M_FOUNDATION_IMPORT_PLAT_THREAD

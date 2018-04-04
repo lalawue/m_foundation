@@ -14,6 +14,9 @@
 #include "m_mem.h"
 #include "m_list.h"
 #include "m_stm.h"
+#include "mfoundation_import.h"
+
+#if M_FOUNDATION_IMPORT_MODEL_STM
 
 struct s_stm {
    lock_t lock;
@@ -151,3 +154,5 @@ int stm_total(void) {
    global_stm_t *gs = &_g_stm;
    return lst_count(gs->stm_lst);
 }
+
+#endif  /* M_FOUNDATION_IMPORT_MODEL_STM */

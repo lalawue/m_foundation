@@ -7,6 +7,9 @@
 
 
 #include "plat_type.h"
+#include "mfoundation_import.h"
+
+#if M_FOUNDATION_IMPORT_PLAT_TYPE
 
 #ifdef PLAT_OS_WIN
 
@@ -42,3 +45,5 @@ vs_strcasestr(const char *s, const char *find) {
 }
 
 #endif
+
+#endif  // M_FOUNDATION_IMPORT_PLAT_TYPE

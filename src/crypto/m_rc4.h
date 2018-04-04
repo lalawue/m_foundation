@@ -18,6 +18,13 @@ extern "C" {
 
 #define RC4_CRYPTO_OCCUPY 8
 
+enum {
+   RC4_ERR_INSUFFICIENT_IN_BUFFER_SIZE = -1,
+   RC4_ERR_INSUFFICIENT_OUT_BUFFER_SIZE = -2,
+   RC4_ERR_OVER_TIME_SECOND = -3,
+   RC4_ERR_KEY_INVALID = -4,   
+};
+
 uint64_t rc4_hash_key(const char * str, int sz);
 
 int rc4_encrypt(const char *in, int in_sz, char *out, int out_sz, uint64_t key, time_t ti);

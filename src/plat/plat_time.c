@@ -20,6 +20,9 @@
 
 #endif
 #include "plat_time.h"
+#include "mfoundation_import.h"
+
+#if M_FOUNDATION_IMPORT_PLAT_TIME
 
 /* micro second */
 int64_t mtime_current(void) {
@@ -43,3 +46,5 @@ void mtime_sleep(int millisecond) {
    usleep(millisecond * 1000);
 #endif
 }
+
+#endif // M_FOUNDATION_IMPORT_PLAT_TIME

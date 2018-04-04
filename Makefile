@@ -1,6 +1,6 @@
 
 CC=gcc
-CFLAGS= -Wall -std=c99 -Wdeprecated-declarations
+CFLAGS= -Wall -std=c99 -Wdeprecated-declarations -DM_FOUNDATION_IMPORT_ALL
 
 DEBUG= -g
 RELEASE= -O2
@@ -11,7 +11,7 @@ LIB_SRCS := $(shell find src -name "*.c")
 
 DIRS := $(shell find src -type d)
 
-INCS := $(foreach n, $(DIRS), -I$(n))
+INCS := -I. $(foreach n, $(DIRS), -I$(n))
 
 all: debug
 

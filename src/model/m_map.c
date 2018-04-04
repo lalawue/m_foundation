@@ -13,6 +13,9 @@
 #include "m_map.h"
 #include "m_list.h"
 #include "m_mem.h"
+#include "mfoundation_import.h"
+
+#if M_FOUNDATION_IMPORT_MODEL_MAP
 
 typedef struct s_map_kv {
    struct s_map_kv *next;
@@ -217,3 +220,5 @@ map_foreach(map_t *d, map_enumerate_callback cb, void *opaque) {
       }
    }
 }
+
+#endif  // M_FOUNDATION_IMPORT_MODEL_MAP
