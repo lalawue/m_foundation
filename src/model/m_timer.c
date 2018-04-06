@@ -11,7 +11,7 @@
 #include "m_timer.h"
 #include "mfoundation_import.h"
 
-#if M_FOUNDATION_IMPORT_MODEL_STM
+#if M_FOUNDATION_IMPORT_MODEL_TIMER
 
 struct s_tmr {
    skt_t *timer_lst;
@@ -81,7 +81,11 @@ tmr_update_lst(tmr_t *tmr, int64_t current_ti) {
          c->cb(c->opaque);
 
          if ( c->repeat ) {
-            c->fire_ti = current_ti + c->interval_ti;
+            
+            while (c->fire_ti <= current_ti) {
+               c->fire_ti += c->interval_ti;
+            }
+            
             while ( !skt_insert(tmr->timer_lst, _timer_key(c), c) ) {
                c->fire_ti += 1;
             }
@@ -163,4 +167,4 @@ tmr_invalidate(tmr_t *tmr, tmr_timer_t *c) {
    }
 }
 
-#endif  /* M_FOUNDATION_IMPORT_MODEL_STM */
+#endif  /* M_FOUNDATION_IMPORT_MODEL_TIMER */
