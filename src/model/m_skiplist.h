@@ -41,7 +41,7 @@ skt_iter_t* skt_iter_init(skt_t*, skt_iter_t*);
 skt_iter_t* skt_iter_next(skt_t*, skt_iter_t*); /* use after iter_next */
 
 #define skt_foreach(it, skt)                    \
-   for (skt_iter_t _##it, *it=lst_iter_init(skt, &_##it); (it=skt_iter_next(skt, it));)
+   for (skt_iter_t _##it, *it=skt_iter_init(skt, &_##it); (it=skt_iter_next(skt, it));)
    
 
 #ifdef __cplusplus
