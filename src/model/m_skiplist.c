@@ -244,14 +244,14 @@ skt_iter_next(skt_t *lst, skt_iter_t *it) {
       if (prev == NULL) {
          it->opaque = lst->header;         
       }
-      else {
+      else if (prev != lst->tail) {
          it->opaque = prev->forward[0];
-      }
-      skt_node_t *p = ((skt_node_t*)it->opaque)->forward[0];   
-      it->key = p->key;
-      it->value = p->value;
-      if (p != lst->tail) {
-         return it;
+         if (it->opaque != lst->tail) {
+            skt_node_t *p = ((skt_node_t*)it->opaque)->forward[0];   
+            it->key = p->key;
+            it->value = p->value;
+            return it;
+         }
       }
    }
    return NULL;
