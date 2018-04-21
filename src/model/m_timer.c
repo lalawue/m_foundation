@@ -7,101 +7,192 @@
 
 #include <stdio.h>
 #include "m_mem.h"
-#include "m_skiplist.h"
+#include "m_list.h"
 #include "m_timer.h"
+#include "m_skiplist.h"
 #include "mfoundation_import.h"
 
 #if M_FOUNDATION_IMPORT_MODEL_TIMER
 
+/* schedule unit */
+typedef struct {
+   int64_t fire_ti;             /* fire date */
+   lst_t *tm_lst;               /* timer list */
+} tmr_unit_t;
+
+/* list of schedule unit */
 struct s_tmr {
-   skt_t *timer_lst;
+   skt_t *unit_skt;             /* sched unit */
 };
 
+/* callback timer */
 struct s_tmr_timer {
-   
-   int64_t fire_ti;             /* fire date */
-   int64_t interval_ti;         /* interval */
-   
+   int64_t interval_ti;         /* interval */   
    unsigned char repeat;        /* repeat mode */
    tmr_callback cb;             /* call back */
-   
    void *opaque;                /* user data */
+
+   tmr_unit_t *unit;            /* unit */
+   lst_node_t *node;            /* node in unit */
 };
 
-static inline uint32_t
-_timer_key(tmr_timer_t *c) {
-   return (c->fire_ti & SKT_KEY_MASK);
-}
 
-
+/* create unit list */
 tmr_t*
 tmr_create_lst(void) {
    
    tmr_t *tmr = (tmr_t*)mm_malloc(sizeof(*tmr));
    if (tmr) {
-      tmr->timer_lst = skt_create();
+      tmr->unit_skt = skt_create();
    }
    return tmr;
 }
 
 
+/* create unit */
+static tmr_unit_t*
+_tmr_unit_create(int64_t fire_ti) {
+   
+   tmr_unit_t *u = (tmr_unit_t*)mm_malloc(sizeof(*u));
+   if (u) {
+      
+      u->fire_ti = fire_ti;
+      u->tm_lst = lst_create();
+   }
+   return u;
+}
+
+
+/* remove unit from schedule list */
+static int
+_tmr_unit_remove(tmr_t *tmr, tmr_unit_t *u) {
+   
+   if ( u ) {
+      
+      if (lst_count(u->tm_lst) <= 0) {
+         skt_remove(tmr->unit_skt, u->fire_ti);
+         return 1;
+      }
+   }
+   return 0;
+}
+
+
+/* destroy unit */
+static void
+_tmr_unit_destroy(tmr_unit_t *u) {
+   
+   if ( u ) {
+      
+      while (lst_count(u->tm_lst) > 0) {
+         mm_free( lst_popf(u->tm_lst) );
+      }
+      
+      lst_destroy(u->tm_lst);
+      mm_free(u);
+   }
+}
+
+
+/* destroy unit list */
 void
 tmr_destroy_lst(tmr_t *tmr) {
    
    if (tmr) {
       
-      while (skt_count(tmr->timer_lst) > 0) {
-         mm_free(skt_popf(tmr->timer_lst));
+      while (skt_count(tmr->unit_skt) > 0) {
+         tmr_unit_t *u = (tmr_unit_t*)skt_popf(tmr->unit_skt);
+         _tmr_unit_destroy( u );
       }
-      skt_destroy(tmr->timer_lst);
+      
+      skt_destroy(tmr->unit_skt);
       mm_free(tmr);
    }
 }
 
 
+/* remove tm, then check & remove unit */
+static int
+_tmr_tm_remove(tmr_t *tmr, tmr_timer_t *tm) {
+   if (tmr && tm) {
+      lst_remove(tm->unit->tm_lst, tm->node);
+   }
+   return 0;
+}
+
+
+/* add a timer callback to proper schedule unit */
+static tmr_timer_t*
+_tmr_add(tmr_t *tmr,
+         tmr_timer_t *tm,
+         int64_t current_ti,
+         int64_t interval_ti,
+         int repeat,
+         void *opaque,
+         tmr_callback cb)
+{
+   int64_t fire_ti = current_ti + interval_ti;
+   tmr_unit_t *u = skt_query(tmr->unit_skt, fire_ti);
+   
+   if (u == NULL) {
+      u = _tmr_unit_create(fire_ti);
+      skt_insert(tmr->unit_skt, fire_ti, u);
+   }
+
+   tm->interval_ti = interval_ti;
+   tm->repeat = repeat;
+   tm->cb = cb;   
+   tm->opaque = opaque;
+
+   tm->unit = u;
+   tm->node = lst_pushl(u->tm_lst, tm);
+
+   return tm;
+}
+
+
+/* check fire date, update schedule unit */
 void
 tmr_update_lst(tmr_t *tmr, int64_t current_ti) {
    
-   if (tmr==NULL || skt_count(tmr->timer_lst)<=0) {
+   if (tmr==NULL || skt_count(tmr->unit_skt)<=0) {
       return;
    }
 
-   // check first fire date
-   tmr_timer_t *ti = (tmr_timer_t*)skt_first(tmr->timer_lst);
-   if (ti->fire_ti > current_ti) {
+   // check first fire unit
+   tmr_unit_t *u = (tmr_unit_t*)skt_first(tmr->unit_skt);
+   if (u->fire_ti > current_ti) {
       return;
    }
-
+   
    // check timer in list
-   while (skt_count(tmr->timer_lst) > 0) {
-      tmr_timer_t *c = (tmr_timer_t*)skt_popf(tmr->timer_lst);
-
-      if (c->fire_ti <= current_ti) {
-
-         c->cb(c->opaque);
-
-         if ( c->repeat ) {
-            
-            while (c->fire_ti <= current_ti) {
-               c->fire_ti += c->interval_ti;
-            }
-            
-            while ( !skt_insert(tmr->timer_lst, _timer_key(c), c) ) {
-               c->fire_ti += 1;
-            }
-         }
-         else {
-            skt_remove(tmr->timer_lst, _timer_key(c));
-            mm_free(c);
-         }
-      }
-      else {
+   for (int i=0; i<skt_count(tmr->unit_skt); i++) {
+      
+      tmr_unit_t *u = skt_first(tmr->unit_skt);
+      if (u->fire_ti > current_ti) {
          break;
       }
+
+      do {
+         tmr_timer_t *tm = (tmr_timer_t*)lst_popf(u->tm_lst);
+
+         tm->cb(tm->opaque);
+         
+         if (tm->repeat) {
+            _tmr_add(tmr, tm, current_ti, tm->interval_ti, tm->repeat, tm->opaque, tm->cb);
+         } else {
+            mm_free(tm);               
+         }
+         
+      } while (lst_count(u->tm_lst) > 0);
+
+      _tmr_unit_remove(tmr, u);
+      _tmr_unit_destroy(u);
    }
 }
 
 
+/* add a timer callback to tmr */
 tmr_timer_t*
 tmr_add(tmr_t *tmr,
         int64_t current_ti,
@@ -112,58 +203,54 @@ tmr_add(tmr_t *tmr,
 {
    if (tmr && cb) {
       
-      tmr_timer_t *n = (tmr_timer_t*)mm_malloc(sizeof(*n));
-      
-      n->fire_ti = current_ti + interval_ti;
-      n->interval_ti = interval_ti;
-      
-      n->repeat = repeat;
-      n->opaque = opaque;
-      
-      n->cb = cb;
-
-      while ( !skt_insert(tmr->timer_lst, _timer_key(n), n) ) {
-         n->fire_ti += 1;
+      tmr_timer_t *tm = (tmr_timer_t*)mm_malloc(sizeof(*tm));
+      if ( tm ) {
+         return _tmr_add(tmr, tm, current_ti, interval_ti, repeat, opaque, cb);
       }
-      return n;
    }
    return NULL;
 }
 
 
+/* fire a timer callback */
 void
 tmr_fire(tmr_t *tmr,
-         tmr_timer_t *c,
+         tmr_timer_t *tm,
          int64_t current_ti,
          int run_callback)
 {
-   if (tmr && c) {
-      
-      skt_remove(tmr->timer_lst, _timer_key(c));
+   if (tmr && tm) {
 
+      _tmr_tm_remove(tmr, tm);
+
+      if ( _tmr_unit_remove(tmr, tm->unit) ) {
+         _tmr_unit_destroy(tm->unit);
+      }      
+      
       if (run_callback) {
-         c->cb(c->opaque);
+         tm->cb(tm->opaque);
       }
 
-      if ( !c->repeat ) {
-         mm_free(c);
+      if ( !tm->repeat ) {
+         mm_free(tm);
          return;
       }
 
-      c->fire_ti = current_ti + c->interval_ti;
-      while ( !skt_insert(tmr->timer_lst, _timer_key(c), c) ) {
-         c->fire_ti += 1;
-      }
+      _tmr_add(tmr, tm, current_ti, tm->interval_ti, tm->repeat, tm->opaque, tm->cb);
    }
 }
 
 
+/* invalidate a timer callback */
 void
-tmr_invalidate(tmr_t *tmr, tmr_timer_t *c) {
+tmr_invalidate(tmr_t *tmr, tmr_timer_t *tm) {
    
-   if (tmr && c) {
-      skt_remove(tmr->timer_lst, _timer_key(c));
-      mm_free(c);
+   if (tmr && tm) {
+      _tmr_tm_remove(tmr, tm);
+      if ( _tmr_unit_remove(tmr, tm->unit) ) {
+         _tmr_unit_destroy(tm->unit);
+      }
+      mm_free(tm);
    }
 }
 

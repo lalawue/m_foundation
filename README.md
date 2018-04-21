@@ -11,3 +11,8 @@
 m_foundation was a cross platform library, require C99.
 
 create your own mfoundation_import.h to import required module.
+
+## Compile & Run
+
+1. make & make test, to generate test app
+2. make release to generate shared lib

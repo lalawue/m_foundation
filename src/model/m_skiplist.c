@@ -25,7 +25,7 @@
 #define kMaxLevel (kMaxNumberOfLevels - 1)
 
 typedef struct s_skt_node {
-   uint32_t key;
+   uint64_t key;
    void *value;
    struct s_skt_node *forward[1]; /* forward pointers */
 } skt_node_t;
@@ -112,7 +112,7 @@ skt_count(skt_t *lst) {
 }
 
 void*
-skt_query(skt_t *lst, uint32_t key) {
+skt_query(skt_t *lst, uint64_t key) {
    int k;
    skt_node_t *p, *next;
    
@@ -137,7 +137,7 @@ skt_query(skt_t *lst, uint32_t key) {
  * return NULL when key exist or other error
  */
 void*
-skt_insert(skt_t *lst, uint32_t key, void *value) {
+skt_insert(skt_t *lst, uint64_t key, void *value) {
    if (lst && key>0 && key<SKT_KEY_MASK && value) {
       int k;
       skt_node_t *p, *next;
@@ -176,7 +176,7 @@ skt_insert(skt_t *lst, uint32_t key, void *value) {
 }
 
 void*
-skt_remove(skt_t *lst, uint32_t key) {
+skt_remove(skt_t *lst, uint64_t key) {
    void *ret_value = NULL;
    if (lst && key>0 && key<SKT_KEY_MASK) {
       int k, m;
@@ -229,7 +229,7 @@ skt_popf(skt_t *lst) {
 skt_iter_t*
 skt_iter_init(skt_t *lst, skt_iter_t *it) {
    if (lst && lst->count>0 && it) {
-      it->opaque = NULL;
+      it->opaque = lst->header;
       it->key = 0;
       it->value = NULL;
       return it;
@@ -240,18 +240,12 @@ skt_iter_init(skt_t *lst, skt_iter_t *it) {
 skt_iter_t*
 skt_iter_next(skt_t *lst, skt_iter_t *it) {
    if (lst && lst->count>0 && it) {
-      skt_node_t *prev = (skt_node_t*)it->opaque;
-      if (prev == NULL) {
-         it->opaque = lst->header;         
-      }
-      else if (prev != lst->tail) {
-         it->opaque = prev->forward[0];
-         if (it->opaque != lst->tail) {
-            skt_node_t *p = ((skt_node_t*)it->opaque)->forward[0];   
-            it->key = p->key;
-            it->value = p->value;
-            return it;
-         }
+      skt_node_t *node = ((skt_node_t*)it->opaque)->forward[0];
+      if (it->opaque!=lst->tail && node!=lst->tail) {
+         it->key = node->key;
+         it->value = node->value;
+         it->opaque = node;
+         return it;
       }
    }
    return NULL;

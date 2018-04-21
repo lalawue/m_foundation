@@ -14,13 +14,13 @@ extern "C" {
 
 #include <stdint.h>
 
-#define SKT_KEY_MASK (0x7fffffff)
+#define SKT_KEY_MASK (~0)
 
 typedef struct s_skt skt_t;
 
 typedef struct s_skt_iter {
    void *opaque;                /* for internal */
-   uint32_t key;
+   uint64_t key;
    void *value;
 } skt_iter_t;
    
@@ -30,9 +30,9 @@ void skt_destroy(skt_t*);
 
 int skt_count(skt_t*);
 
-void* skt_query(skt_t*, uint32_t key);
-void* skt_insert(skt_t*, uint32_t key, void *value);
-void* skt_remove(skt_t*, uint32_t key);
+void* skt_query(skt_t*, uint64_t key);
+void* skt_insert(skt_t*, uint64_t key, void *value);
+void* skt_remove(skt_t*, uint64_t key);
    
 void* skt_first(skt_t*);
 void* skt_popf(skt_t*);
@@ -40,7 +40,7 @@ void* skt_popf(skt_t*);
 skt_iter_t* skt_iter_init(skt_t*, skt_iter_t*);
 skt_iter_t* skt_iter_next(skt_t*, skt_iter_t*); /* use after iter_next */
 
-#define skt_foreach(it, skt)                    \
+#define skt_foreach(it, skt)                                            \
    for (skt_iter_t _##it, *it=skt_iter_init(skt, &_##it); (it=skt_iter_next(skt, it));)
    
 
