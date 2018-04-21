@@ -59,8 +59,9 @@ int main(int argc, char *argv[]) {
       skt_foreach(it, lst) {
          unsigned int *m = it->value;
          printf("%u, ", *m);
+         skt_remove(lst, it->key);
       }
-      printf("\n");
+      printf("\ncount:%d\n", skt_count(lst));
       
       skt_destroy(lst);
    }
