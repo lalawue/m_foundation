@@ -32,8 +32,8 @@ struct s_tmr_timer {
    tmr_callback cb;             /* call back */
    void *opaque;                /* user data */
 
-   tmr_unit_t *unit;            /* unit */
-   lst_node_t *node;            /* node in unit */
+   tmr_unit_t *unit;            /* unit in unit_skt */
+   lst_node_t *node;            /* node in tm_lst */
 };
 
 
@@ -125,13 +125,9 @@ _tmr_tm_remove(tmr_t *tmr, tmr_timer_t *tm) {
 static tmr_timer_t*
 _tmr_add(tmr_t *tmr,
          tmr_timer_t *tm,
-         int64_t current_ti,
-         int64_t interval_ti,
-         int repeat,
-         void *opaque,
-         tmr_callback cb)
+         int64_t current_ti)
 {
-   int64_t fire_ti = current_ti + interval_ti;
+   int64_t fire_ti = current_ti + tm->interval_ti;
    tmr_unit_t *u = skt_query(tmr->unit_skt, fire_ti);
    
    if (u == NULL) {
@@ -139,14 +135,8 @@ _tmr_add(tmr_t *tmr,
       skt_insert(tmr->unit_skt, fire_ti, u);
    }
 
-   tm->interval_ti = interval_ti;
-   tm->repeat = repeat;
-   tm->cb = cb;   
-   tm->opaque = opaque;
-
    tm->unit = u;
    tm->node = lst_pushl(u->tm_lst, tm);
-
    return tm;
 }
 
@@ -179,7 +169,7 @@ tmr_update_lst(tmr_t *tmr, int64_t current_ti) {
          tm->cb(tm->opaque);
          
          if (tm->repeat) {
-            _tmr_add(tmr, tm, current_ti, tm->interval_ti, tm->repeat, tm->opaque, tm->cb);
+            _tmr_add(tmr, tm, current_ti);
          } else {
             mm_free(tm);               
          }
@@ -205,7 +195,11 @@ tmr_add(tmr_t *tmr,
       
       tmr_timer_t *tm = (tmr_timer_t*)mm_malloc(sizeof(*tm));
       if ( tm ) {
-         return _tmr_add(tmr, tm, current_ti, interval_ti, repeat, opaque, cb);
+         tm->interval_ti = interval_ti;
+         tm->repeat = repeat;
+         tm->cb = cb;
+         tm->opaque = opaque;
+         return _tmr_add(tmr, tm, current_ti);
       }
    }
    return NULL;
@@ -236,7 +230,7 @@ tmr_fire(tmr_t *tmr,
          return;
       }
 
-      _tmr_add(tmr, tm, current_ti, tm->interval_ti, tm->repeat, tm->opaque, tm->cb);
+      _tmr_add(tmr, tm, current_ti);
    }
 }
 

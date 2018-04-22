@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include "m_mem.h"
 #include "m_timer.h"
 
 static void
@@ -18,7 +19,7 @@ _test_tmr_callback(void *opaque) {
 
 int main(int argc, char *argv[]) {
 
-   int value[3] = {0, 1, 2};
+   int value[4] = {0, 1, 2, 3};
    tmr_timer_t *tm[3];
    
    tmr_t *tmr = tmr_create_lst();
@@ -27,6 +28,10 @@ int main(int argc, char *argv[]) {
       
       if (i <= 2) {
          tm[i] = tmr_add(tmr, i, 1+i, 1, &value[i], _test_tmr_callback);
+         if (i == 2) {
+            int j = i + 1;
+            tm[j] = tmr_add(tmr, i, 2*(j+1), 1, &value[j], _test_tmr_callback);
+         }
       }
 
       usleep(500000);
@@ -42,7 +47,7 @@ int main(int argc, char *argv[]) {
    }
 
    tmr_destroy_lst(tmr);
-   
+   mm_report(0);
    return 0;
 }
 
