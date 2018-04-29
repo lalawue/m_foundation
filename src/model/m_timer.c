@@ -20,9 +20,11 @@ typedef struct {
    lst_t *tm_lst;               /* timer list */
 } tmr_unit_t;
 
-/* list of schedule unit */
+/* schedule unit, free unit & tm */
 struct s_tmr {
    skt_t *unit_skt;             /* sched unit */
+   lst_t *unit_free;            /* free unit */
+   lst_t *tm_free;              /* free tm */
 };
 
 /* callback timer */
@@ -44,53 +46,55 @@ tmr_create_lst(void) {
    tmr_t *tmr = (tmr_t*)mm_malloc(sizeof(*tmr));
    if (tmr) {
       tmr->unit_skt = skt_create();
+      tmr->unit_free = lst_create();
+      tmr->tm_free = lst_create();
    }
    return tmr;
 }
 
 
-/* create unit */
+/* create and active unit  */
 static tmr_unit_t*
-_tmr_unit_create(int64_t fire_ti) {
+_tmr_unit_create(tmr_t *tmr, int64_t fire_ti) {
    
-   tmr_unit_t *u = (tmr_unit_t*)mm_malloc(sizeof(*u));
-   if (u) {
-      
-      u->fire_ti = fire_ti;
+   tmr_unit_t *u = NULL;
+
+   if (lst_count(tmr->unit_free) > 0) {
+      u = lst_popf(tmr->unit_free);
+   } else {
+      u = (tmr_unit_t*)mm_malloc(sizeof(*u));
       u->tm_lst = lst_create();
    }
+
+   u->fire_ti = fire_ti;
+   skt_insert(tmr->unit_skt, fire_ti, u);
+
    return u;
 }
 
 
-/* remove unit from schedule list */
-static int
-_tmr_unit_remove(tmr_t *tmr, tmr_unit_t *u) {
-   
-   if ( u ) {
-      
-      if (lst_count(u->tm_lst) <= 0) {
-         skt_remove(tmr->unit_skt, u->fire_ti);
-         return 1;
-      }
+/* suspend unit when no timer left */
+static void
+_tmr_unit_try_suspend(tmr_t *tmr, tmr_unit_t *u) {
+
+   if (lst_count(u->tm_lst) <= 0) {
+
+      skt_remove(tmr->unit_skt, u->fire_ti);
+      lst_pushl(tmr->unit_free, u);
    }
-   return 0;
 }
 
 
-/* destroy unit */
+/* destroy unit, free every timer */
 static void
 _tmr_unit_destroy(tmr_unit_t *u) {
-   
-   if ( u ) {
-      
-      while (lst_count(u->tm_lst) > 0) {
-         mm_free( lst_popf(u->tm_lst) );
-      }
-      
-      lst_destroy(u->tm_lst);
-      mm_free(u);
+
+   while (lst_count(u->tm_lst) > 0) {
+      mm_free( lst_popf(u->tm_lst) );
    }
+
+   lst_destroy(u->tm_lst);
+   mm_free(u);
 }
 
 
@@ -101,38 +105,62 @@ tmr_destroy_lst(tmr_t *tmr) {
    if (tmr) {
       
       while (skt_count(tmr->unit_skt) > 0) {
-         tmr_unit_t *u = (tmr_unit_t*)skt_popf(tmr->unit_skt);
-         _tmr_unit_destroy( u );
+         _tmr_unit_destroy( skt_popf(tmr->unit_skt) );
       }
-      
       skt_destroy(tmr->unit_skt);
+
+      while (lst_count(tmr->unit_free) > 0) {
+         _tmr_unit_destroy( lst_popf(tmr->unit_free) );
+      }
+      lst_destroy(tmr->unit_free);
+
+      while (lst_count(tmr->tm_free) > 0) {
+         mm_free( lst_popf(tmr->tm_free) );
+      }
+      lst_destroy(tmr->tm_free);
+
       mm_free(tmr);
    }
 }
 
 
-/* remove tm, then check & remove unit */
-static int
-_tmr_tm_remove(tmr_t *tmr, tmr_timer_t *tm) {
-   if (tmr && tm) {
-      lst_remove(tm->unit->tm_lst, tm->node);
+/* create tm */
+static tmr_timer_t*
+_tmr_tm_create(tmr_t *tmr) {
+   tmr_timer_t *tm = NULL;
+   if (lst_count(tmr->tm_free) > 0) {
+      tm = (tmr_timer_t*)lst_popf(tmr->tm_free);
+   } else {
+      tm = (tmr_timer_t*)mm_malloc(sizeof(*tm));
    }
-   return 0;
+   return tm;
+}
+
+
+/* suspend tm, remove tm from unit */
+static inline void
+_tmr_tm_suspend(tmr_t *tmr, tmr_timer_t *tm) {
+   lst_remove(tm->unit->tm_lst, tm->node);
+}
+
+/* recycle to tm_free */
+static inline void
+_tmr_tm_recycle(tmr_t *tmr, tmr_timer_t *tm) {
+   lst_pushl(tmr->tm_free, tm);
 }
 
 
 /* add a timer callback to proper schedule unit */
 static tmr_timer_t*
-_tmr_add(tmr_t *tmr,
-         tmr_timer_t *tm,
-         int64_t current_ti)
+_tmr_add_tm(tmr_t *tmr,
+            tmr_timer_t *tm,
+            int64_t current_ti)
 {
    int64_t fire_ti = current_ti + tm->interval_ti;
    tmr_unit_t *u = skt_query(tmr->unit_skt, fire_ti);
    
    if (u == NULL) {
-      u = _tmr_unit_create(fire_ti);
-      skt_insert(tmr->unit_skt, fire_ti, u);
+      u = _tmr_unit_create(tmr, fire_ti);
    }
 
    tm->unit = u;
@@ -169,15 +197,14 @@ tmr_update_lst(tmr_t *tmr, int64_t current_ti) {
          tm->cb(tm->opaque);
          
          if (tm->repeat) {
-            _tmr_add(tmr, tm, current_ti);
+            _tmr_add_tm(tmr, tm, current_ti);
          } else {
-            mm_free(tm);               
+            _tmr_tm_recycle(tmr, tm);
          }
          
       } while (lst_count(u->tm_lst) > 0);
 
-      _tmr_unit_remove(tmr, u);
-      _tmr_unit_destroy(u);
+      _tmr_unit_try_suspend(tmr, u);
    }
 }
 
@@ -193,13 +220,13 @@ tmr_add(tmr_t *tmr,
 {
    if (tmr && cb) {
       
-      tmr_timer_t *tm = (tmr_timer_t*)mm_malloc(sizeof(*tm));
+      tmr_timer_t *tm = _tmr_tm_create(tmr);
       if ( tm ) {
          tm->interval_ti = interval_ti;
          tm->repeat = repeat;
          tm->cb = cb;
          tm->opaque = opaque;
-         return _tmr_add(tmr, tm, current_ti);
+         return _tmr_add_tm(tmr, tm, current_ti);
       }
    }
    return NULL;
@@ -213,24 +240,21 @@ tmr_fire(tmr_t *tmr,
          int64_t current_ti,
          int run_callback)
 {
-   if (tmr && tm) {
+   if (tmr && tm && tm->unit) {
 
-      _tmr_tm_remove(tmr, tm);
-
-      if ( _tmr_unit_remove(tmr, tm->unit) ) {
-         _tmr_unit_destroy(tm->unit);
-      }      
+      _tmr_tm_suspend(tmr, tm);
+      _tmr_unit_try_suspend(tmr, tm->unit);
       
       if (run_callback) {
          tm->cb(tm->opaque);
       }
 
       if ( !tm->repeat ) {
-         mm_free(tm);
+         _tmr_tm_recycle(tmr, tm);
          return;
       }
 
-      _tmr_add(tmr, tm, current_ti);
+      _tmr_add_tm(tmr, tm, current_ti);
    }
 }
 
@@ -239,12 +263,10 @@ tmr_fire(tmr_t *tmr,
 void
 tmr_invalidate(tmr_t *tmr, tmr_timer_t *tm) {
    
-   if (tmr && tm) {
-      _tmr_tm_remove(tmr, tm);
-      if ( _tmr_unit_remove(tmr, tm->unit) ) {
-         _tmr_unit_destroy(tm->unit);
-      }
-      mm_free(tm);
+   if (tmr && tm && tm->unit) {
+      _tmr_tm_suspend(tmr, tm);
+      _tmr_tm_recycle(tmr, tm);
+      _tmr_unit_try_suspend(tmr, tm->unit);
    }
 }
 

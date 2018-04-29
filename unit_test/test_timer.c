@@ -14,7 +14,7 @@
 
 static void
 _test_tmr_callback(void *opaque) {
-   printf("tmr callback %d\n", *((int*)opaque));
+   printf("cb %d, ", *((int*)opaque));
 }
 
 int main(int argc, char *argv[]) {
@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
    
    tmr_t *tmr = tmr_create_lst();
 
-   for (int i=0; i<20; i++) {
+   for (int i=0; i<21; i++) {
       
       if (i <= 2) {
          tm[i] = tmr_add(tmr, i, 1+i, 1, &value[i], _test_tmr_callback);
@@ -36,6 +36,7 @@ int main(int argc, char *argv[]) {
 
       usleep(500000);
 
+      printf("%02d ", i);
       tmr_update_lst(tmr, i);
 
       if (i == 10) {
@@ -44,10 +45,12 @@ int main(int argc, char *argv[]) {
       else if (i == 16) {
          tmr_fire(tmr, tm[1], i, 1);
       }
+
+      printf("\n");
    }
 
    tmr_destroy_lst(tmr);
-   mm_report(0);
+   mm_report(2);
    return 0;
 }
 

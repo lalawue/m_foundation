@@ -42,10 +42,10 @@ tmr_timer_t* tmr_add(tmr_t*,
 void tmr_fire(tmr_t*,
               tmr_timer_t*,
               int64_t current_ti, /* current time unit */
-              int run_callback);  /* wether run callback */
+              int run_callback);  /* run callback */
 
    
-// remove timer from list
+// suspend timer
 void tmr_invalidate(tmr_t*, tmr_timer_t*);
 
 
