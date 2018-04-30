@@ -194,7 +194,7 @@ tmr_update_lst(tmr_t *tmr, int64_t current_ti) {
       do {
          tmr_timer_t *tm = (tmr_timer_t*)lst_popf(u->tm_lst);
 
-         tm->cb(tm->opaque);
+         tm->cb(tm, tm->opaque);
          
          if (tm->repeat) {
             _tmr_add_tm(tmr, tm, current_ti);
@@ -246,7 +246,7 @@ tmr_fire(tmr_t *tmr,
       _tmr_unit_try_suspend(tmr, tm->unit);
       
       if (run_callback) {
-         tm->cb(tm->opaque);
+         tm->cb(tm, tm->opaque);
       }
 
       if ( !tm->repeat ) {

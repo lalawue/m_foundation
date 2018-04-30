@@ -13,8 +13,8 @@
 #include "m_timer.h"
 
 static void
-_test_tmr_callback(void *opaque) {
-   printf("cb %d, ", *((int*)opaque));
+_test_tmr_callback(tmr_timer_t *tm, void *opaque) {
+   printf("cb %d<%p>, ", *((int*)opaque), tm);
 }
 
 int main(int argc, char *argv[]) {

@@ -15,11 +15,12 @@ extern "C" {
 #include <stdint.h>
 
 
-typedef void (*tmr_callback)(void *opaque);
-   
 
 typedef struct s_tmr tmr_t;
-typedef struct s_tmr_timer tmr_timer_t;   
+typedef struct s_tmr_timer tmr_timer_t;
+
+
+typedef void (*tmr_callback)(tmr_timer_t*, void *opaque);
 
 
 
