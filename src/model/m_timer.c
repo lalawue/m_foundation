@@ -60,7 +60,7 @@ _tmr_unit_create(tmr_t *tmr, int64_t fire_ti) {
    tmr_unit_t *u = NULL;
 
    if (lst_count(tmr->unit_free) > 0) {
-      u = lst_popf(tmr->unit_free);
+      u = (tmr_unit_t*)lst_popf(tmr->unit_free);
    } else {
       u = (tmr_unit_t*)mm_malloc(sizeof(*u));
       u->tm_lst = lst_create();
@@ -105,12 +105,12 @@ tmr_destroy_lst(tmr_t *tmr) {
    if (tmr) {
       
       while (skt_count(tmr->unit_skt) > 0) {
-         _tmr_unit_destroy( skt_popf(tmr->unit_skt) );
+         _tmr_unit_destroy( (tmr_unit_t*)skt_popf(tmr->unit_skt) );
       }
       skt_destroy(tmr->unit_skt);
 
       while (lst_count(tmr->unit_free) > 0) {
-         _tmr_unit_destroy( lst_popf(tmr->unit_free) );
+         _tmr_unit_destroy( (tmr_unit_t*)lst_popf(tmr->unit_free) );
       }
       lst_destroy(tmr->unit_free);
 
@@ -157,7 +157,7 @@ _tmr_add_tm(tmr_t *tmr,
             int64_t current_ti)
 {
    int64_t fire_ti = current_ti + tm->interval_ti;
-   tmr_unit_t *u = skt_query(tmr->unit_skt, fire_ti);
+   tmr_unit_t *u = (tmr_unit_t*)skt_query(tmr->unit_skt, fire_ti);
    
    if (u == NULL) {
       u = _tmr_unit_create(tmr, fire_ti);
@@ -186,7 +186,7 @@ tmr_update_lst(tmr_t *tmr, int64_t current_ti) {
    // check timer in list
    for (int i=0; i<skt_count(tmr->unit_skt); i++) {
       
-      tmr_unit_t *u = skt_first(tmr->unit_skt);
+      tmr_unit_t *u = (tmr_unit_t*)skt_first(tmr->unit_skt);
       if (u->fire_ti > current_ti) {
          break;
       }
