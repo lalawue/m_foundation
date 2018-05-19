@@ -9,6 +9,7 @@
 #include "plat_os.h"
 #ifdef PLAT_OS_WIN
 #include <windows.h>
+#include <stdint.h>
 #else
 #define _XOPEN_SOURCE 500
 #include <sys/types.h>
