@@ -19,7 +19,8 @@ extern "C" {
 typedef struct s_skt skt_t;
 
 typedef struct s_skt_iter {
-   void *opaque;                /* for internal */
+   void *prev;                  /* for internal */
+   void *curr;                  /* for internal */
    uint64_t key;
    void *value;
 } skt_iter_t;
@@ -39,7 +40,9 @@ void* skt_popf(skt_t*);
 
 skt_iter_t* skt_iter_init(skt_t*, skt_iter_t*);
 skt_iter_t* skt_iter_next(skt_t*, skt_iter_t*); /* use after iter_next */
+void* skt_iter_remove(skt_t*, skt_iter_t*); /* remove current iter */
 
+// use iter_remove within skt_foreach
 #define skt_foreach(it, skt)                                            \
    for (skt_iter_t _##it, *it=skt_iter_init(skt, &_##it); (it=skt_iter_next(skt, it));)
    

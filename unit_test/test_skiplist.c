@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
       skt_foreach(it, lst) {
          unsigned int *m = it->value;
          printf("%u, ", *m);
-         skt_remove(lst, it->key);
+         skt_iter_remove(lst, it);
       }
       printf("\ncount:%d\n", skt_count(lst));
       

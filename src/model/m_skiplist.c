@@ -12,6 +12,7 @@
 
 #include <time.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "m_mem.h"
 #include "m_skiplist.h"
@@ -229,9 +230,7 @@ skt_popf(skt_t *lst) {
 skt_iter_t*
 skt_iter_init(skt_t *lst, skt_iter_t *it) {
    if (lst && lst->count>0 && it) {
-      it->opaque = lst->header;
-      it->key = 0;
-      it->value = NULL;
+      memset(it, 0, sizeof(*it));
       return it;
    }
    return NULL;
@@ -240,12 +239,28 @@ skt_iter_init(skt_t *lst, skt_iter_t *it) {
 skt_iter_t*
 skt_iter_next(skt_t *lst, skt_iter_t *it) {
    if (lst && lst->count>0 && it) {
-      skt_node_t *node = ((skt_node_t*)it->opaque)->forward[0];
-      if (it->opaque!=lst->tail && node!=lst->tail) {
+      if (it->prev == NULL) {
+         it->prev = lst->header;
+      } else if ( it->curr ) {
+         it->prev = ((skt_node_t*)it->prev)->forward[0];
+      }
+      it->curr = ((skt_node_t*)it->prev)->forward[0];
+      skt_node_t *node = (skt_node_t*)it->curr;
+      if (node != lst->tail) {
          it->key = node->key;
          it->value = node->value;
-         it->opaque = node;
          return it;
+      }
+   }
+   return NULL;
+}
+
+void*
+skt_iter_remove(skt_t *lst, skt_iter_t *it) {
+   if (lst && lst->count>0 && it) {
+      if (it->key > 0) {
+         it->curr = NULL;
+         return skt_remove(lst, it->key);
       }
    }
    return NULL;
