@@ -30,6 +30,7 @@ test: $(APP_SRCS)
 	mkdir -p build
 	$(CC) $(DEBUG) $(CFLAGS) $(INCS) -o build/test_timer.out $^ $(TLIBS) -DM_FOUNDATION_TEST_TIMER
 	$(CC) $(DEBUG) $(CFLAGS) $(INCS) -o build/test_skiplist.out $^ $(TLIBS) -DM_FOUNDATION_TEST_SKIPLIST
+	$(CC) $(DEBUG) $(CFLAGS) $(INCS) -o build/test_rs.out $^ $(TLIBS) -DM_FOUNDATION_TEST_RS
 
 clean:
 	rm -rf build
