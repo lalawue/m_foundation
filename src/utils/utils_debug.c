@@ -49,7 +49,7 @@ static inline debug_t* _dbg(unsigned ins) {
 void debug_init(unsigned total_instance) {
    if (g_ins.count <= 0) {
       g_ins.count = total_instance;
-      g_ins.dbg = mm_malloc(sizeof(debug_t) * total_instance);
+      g_ins.dbg = (debug_t*)mm_malloc(sizeof(debug_t) * total_instance);
       return;
    }
    assert(0);
