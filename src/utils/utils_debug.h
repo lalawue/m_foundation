@@ -28,18 +28,21 @@
 extern "C" {
 #endif
 
-extern void debug_open(char*);
-extern void debug_close(void);
+void debug_init(unsigned);
+void debug_fini(void);
 
-extern void debug_set_option(int);
-extern void debug_set_level(int);
+void debug_open(unsigned, char*);
+void debug_close(unsigned);
 
-extern void debug_raw(const char *fmt, ...);
-extern void debug_log(const char *mod, int level, const char *fname,
-                      int line, const char *fmt, ...);
+void debug_set_option(unsigned,unsigned);
+void debug_set_level(unsigned,unsigned);
 
-#define _mlog(MOD, LEV, ...)                            \
-   debug_log(MOD, LEV, __FILE__, __LINE__, __VA_ARGS__)
+void debug_raw(unsigned,const char *fmt, ...);
+void debug_log(unsigned,const char *mod, unsigned level, const char *fname,
+               int line, const char *fmt, ...);
+
+#define _mlog(INS, MOD, LEV, ...)                               \
+   debug_log(INS, MOD, LEV, __FILE__, __LINE__, __VA_ARGS__)
 
 #ifdef __cplusplus
 }

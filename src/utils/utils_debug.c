@@ -21,26 +21,55 @@
 #include <string.h>
 #include <time.h>
 #include <assert.h>
-#include "m_debug.h"
+
+#include "m_mem.h"
+#include "utils_debug.h"
 #include "mfoundation_import.h"
 
-#if M_FOUNDATION_IMPORT_MODEL_DEBUG
+#if M_FOUNDATION_IMPORT_UTILS_DEBUG
 
 typedef struct {
-   int init;
-   int level;
-   int option;
+   unsigned char init;
+   unsigned level;
+   unsigned option;
    FILE *fp;
 } debug_t;
 
-static debug_t _g_dbg;
+typedef struct {
+   unsigned count;
+   debug_t *dbg;                /* dbg instance */
+} ins_t;
 
-static inline debug_t*  _dbg(void) {
-   return &_g_dbg;
+static ins_t g_ins;
+
+static inline debug_t* _dbg(unsigned ins) {
+   return ins < g_ins.count ? &g_ins.dbg[ins] : NULL;
 }
 
-void debug_open(char *fname) {
-   debug_t *d = _dbg();
+void debug_init(unsigned total_instance) {
+   if (g_ins.count <= 0) {
+      g_ins.count = total_instance;
+      g_ins.dbg = mm_malloc(sizeof(debug_t) * total_instance);
+      return;
+   }
+   assert(0);
+}
+
+void debug_fini(void) {
+   if (g_ins.count > 0) {
+      for (unsigned i=0; i<g_ins.count; i++) {
+         debug_close(i);
+      }
+      g_ins.count = 0;
+      mm_free( g_ins.dbg );
+      g_ins.dbg = NULL;
+      return;
+   }
+   assert(0);
+}
+
+void debug_open(unsigned ins, char *fname) {
+   debug_t *d = _dbg(ins);
    if (fname && !d->init) {
       if (strcmp(fname, "stdout") == 0) {
          d->fp = stdout;
@@ -54,17 +83,17 @@ void debug_open(char *fname) {
       }
       d->option = D_OPT_DEFAULT;
       d->level = D_VERBOSE;
-      fprintf(d->fp, "### debug open (%s)\n", fname);
+      fprintf(d->fp, "### debug %d open (%s)\n", ins, fname);
       d->init = 1;
       return;
    }
    assert(0);
 }
 
-void debug_close(void) {
-   debug_t *d = _dbg();
+void debug_close(unsigned ins) {
+   debug_t *d = _dbg(ins);
    if ( d->init ) {
-      fprintf(d->fp, "### debug close\n");
+      fprintf(d->fp, "### debug %d, close\n", ins);
       if ( d->fp ) {
          if (d->fp!=stdout && d->fp!=stderr) {
             fclose(d->fp);
@@ -74,28 +103,28 @@ void debug_close(void) {
    }
 }
 
-void debug_set_option(int opt) {
-   debug_t *d = _dbg();
+void debug_set_option(unsigned ins, unsigned opt) {
+   debug_t *d = _dbg(ins);
    if ( d->init ) {
       d->option = opt;
-      fprintf(d->fp, "### debug option (0x%x)\n", opt);
+      fprintf(d->fp, "### debug %d option (0x%x)\n", ins, opt);
       return;
    }
    assert(0);
 }
 
-void debug_set_level(int level) {
-   debug_t *d = _dbg();
+void debug_set_level(unsigned ins, unsigned level) {
+   debug_t *d = _dbg(ins);
    if ( d->init ) {
       d->level = level;
-      fprintf(d->fp, "### debug level (%d)\n", level);
+      fprintf(d->fp, "### debug %d level (%d)\n", ins, level);
       return;
    }
    assert(0);
 }
 
-void debug_raw(const char *fmt, ...) {
-   debug_t *d = _dbg();
+void debug_raw(unsigned ins, const char *fmt, ...) {
+   debug_t *d = _dbg(ins);
    if ( d->init ) {
       va_list ap;
       va_start(ap, fmt);
@@ -124,10 +153,14 @@ int64_t debug_time(void) {
 }
 
 void
-debug_log(const char *mod, int level, const char *fname,
-          int line, const char *fmt, ...)
+debug_log(unsigned ins,
+          const char *mod,
+          unsigned level,
+          const char *fname,
+          int line,
+          const char *fmt, ...)
 {
-   debug_t *d = _dbg();
+   debug_t *d = _dbg(ins);
 
    if ( d->init ) {
 
@@ -149,7 +182,7 @@ debug_log(const char *mod, int level, const char *fname,
          fprintf(d->fp, "%u> ", tm);
 #else
          struct tm stm; time_t tloc; struct timeval tv;
-         tloc = time(NULL);
+         time(&tloc);
          localtime_r(&tloc, &stm);
          gettimeofday(&tv, NULL);
          fprintf(d->fp, "%d/%d %02d:%02d:%02d.%03d> ",
@@ -180,4 +213,4 @@ debug_log(const char *mod, int level, const char *fname,
    }
 }
 
-#endif  // M_FOUNDATION_IMPORT_MODEL_DEBUG
+#endif  // M_FOUNDATION_IMPORT_UTILS_DEBUG

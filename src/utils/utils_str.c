@@ -25,16 +25,11 @@
 #endif
 
 #include "m_mem.h"
-#include "m_debug.h"
-
 #include "utils_str.h"
 #include "mfoundation_import.h"
 #include <assert.h>
 
 #if M_FOUNDATION_IMPORT_UTILS_STR
-
-#define _err(...) _mlog("ustr", D_ERROR, __VA_ARGS__)
-#define _info(...) _mlog("ustr", D_INFO, __VA_ARGS__)
 
 #define _FMT_SIZE 4096
 
@@ -123,8 +118,6 @@ static const char *match (MatchState *ms, const char *s, const char *p);
 static int check_capture (MatchState *ms, int l) {
    l -= '1';
    if (l < 0 || l >= ms->level || ms->capture[l].len == CAP_UNFINISHED) {
-      //return luaL_error(ms->L, "invalid capture index %%%d", l + 1);
-      _err("invalid capture index %d\n", l + 1);
       return -1;
    }
    return l;
@@ -133,10 +126,11 @@ static int check_capture (MatchState *ms, int l) {
 
 static int capture_to_close (MatchState *ms) {
    int level = ms->level;
-   for (level--; level>=0; level--)
-      if (ms->capture[level].len == CAP_UNFINISHED) return level;
-   //return luaL_error(ms->L, "invalid pattern capture");
-   _err("invalid pattern capture\n");
+   for (level--; level>=0; level--) {
+      if (ms->capture[level].len == CAP_UNFINISHED) {
+         return level;
+      }
+   }
    return -1;
 }
 
@@ -232,7 +226,6 @@ static const char *matchbalance (MatchState *ms, const char *s,
                                  const char *p) {
    if (p >= ms->p_end - 1) {
       //luaL_error(ms->L, "malformed pattern " "(missing arguments to " LUA_QL("%%b") ")");
-      _err("malformed pattern (missing arguments)\n");
       return NULL;
    }
    if (*s != *p) return NULL;
@@ -285,7 +278,6 @@ static const char *start_capture (MatchState *ms, const char *s,
    int level = ms->level;
    if (level >= LUA_MAXCAPTURES) {
       //luaL_error(ms->L, "too many captures");
-      _err("too many captures\n");
       return NULL;
    }
    ms->capture[level].init = s;
@@ -324,7 +316,6 @@ static const char *match_capture (MatchState *ms, const char *s, int l) {
 static const char *match (MatchState *ms, const char *s, const char *p) {
    if (ms->matchdepth-- == 0) {
       //luaL_error(ms->L, "pattern too complex");
-      _err("pattern too complex\n");
       return NULL;
    }
   init: /* using goto's to optimize tail recursion */
@@ -361,7 +352,6 @@ static const char *match (MatchState *ms, const char *s, const char *p) {
                   p += 2;
                   if (*p != '[') {
                      //luaL_error(ms->L, "missing " LUA_QL("[") " after " LUA_QL("%%f") " in pattern");
-                     _err("missing [ after in pattern\n");
                      s = NULL;       // by sc
                      break;
                   }
@@ -477,7 +467,6 @@ static str_t* _push_onecapture (MatchState *ms, int i, const char *s,
       }
       else {
          //luaL_error(ms->L, "invalid capture index");
-         _err("invalid capture index\n");
          return NULL;
       }
    }
@@ -485,7 +474,6 @@ static str_t* _push_onecapture (MatchState *ms, int i, const char *s,
       ptrdiff_t l = ms->capture[i].len;
       if (l == CAP_UNFINISHED) {
          //luaL_error(ms->L, "unfinished capture");
-         _err("unfinished capture\n");
          return NULL;
       }
 #if 0 /* no more capture position */
@@ -647,7 +635,6 @@ str_find(str_t *m, const char *pattern, int pos) {
             ms.level = 0;
             //lua_assert(ms.matchdepth == MAXCCALLS);
             if (ms.matchdepth != MAXCCALLS) {
-               _err("match depth !\n");
                break;
             }
             if ((res=match(&ms, s1, p)) != NULL) {
@@ -735,12 +722,10 @@ str_split(str_t *m, const char *delim, int icase) {
    if (m && delim) {
       int dlen = strnlen(delim, USTR_DELIM_MAX_LEN);
       if ((dlen>0) && (m->len>dlen)) {
-         //_info("search v\n");
          str_t *head=NULL, *h=NULL;
          char *p = m->cstr;
          do {
             char *n = icase ? strcasestr(p, delim) : strstr(p, delim);
-            //_info("n = %s, %ld\n", n, n - m->cstr);
             if (p == m->cstr) {
                if ((n==NULL) || ((n - m->cstr) > m->len)) {
                   break;

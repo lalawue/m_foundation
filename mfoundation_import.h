@@ -30,7 +30,6 @@
 #ifdef M_FOUNDATION_IMPORT_MODEL
 
 #define M_FOUNDATION_IMPORT_MODEL_MEM 1
-#define M_FOUNDATION_IMPORT_MODEL_DEBUG 1
 
 #define M_FOUNDATION_IMPORT_MODEL_BUF  (M_FOUNDATION_IMPORT_MODEL_MEM)
 #define M_FOUNDATION_IMPORT_MODEL_LIST (M_FOUNDATION_IMPORT_MODEL_MEM)
@@ -69,7 +68,6 @@
 #define M_FOUNDATION_IMPORT_PLAT_TIME    1
 
 #define M_FOUNDATION_IMPORT_PLAT_DIR (M_FOUNDATION_IMPORT_MODEL_MEM && \
-                                      M_FOUNDATION_IMPORT_MODEL_DEBUG && \
                                       M_FOUNDATION_IMPORT_PLAT_CHARSET)
 /* thread operation for win/nix*/
 #define M_FOUNDATION_IMPORT_PLAT_THREAD (M_FOUNDATION_IMPORT_MODEL_MEM && \
@@ -84,12 +82,13 @@
 /* utils module */
 #ifdef M_FOUNDATION_IMPORT_UTILS
 
+#define M_FOUNDATION_IMPORT_UTILS_DEBUG (M_FOUNDATION_IMPORT_MODEL_MEM)
+
 /* utils for get value from args  */
 #define M_FOUNDATION_IMPORT_UTILS_ARGS (M_FOUNDATION_IMPORT_MODEL_MEM && \
                                         M_FOUNDATION_IMPORT_MODEL_LIST)
 /* string split, pattern matching */
 #define M_FOUNDATION_IMPORT_UTILS_STR (M_FOUNDATION_IMPORT_MODEL_MEM && \
-                                       M_FOUNDATION_IMPORT_MODEL_DEBUG && \
                                        M_FOUNDATION_IMPORT_PLAT_TYPE)
  /* url encode/decode */
 #define M_FOUNDATION_IMPORT_UTILS_URL (M_FOUNDATION_IMPORT_MODEL_MEM)

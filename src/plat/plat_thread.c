@@ -10,16 +10,12 @@
 #include <assert.h>
 #include "m_mem.h"
 #include "m_list.h"
-#include "m_debug.h"
 #include "plat_time.h"
 #include "plat_lock.h"
 #include "plat_thread.h"
 #include "mfoundation_import.h"
 
 #if M_FOUNDATION_IMPORT_PLAT_THREAD
-
-#define _err(...)  _mlog("thrd", D_ERROR, __VA_ARGS__)
-#define _log(...)  _mlog("thrd", D_INFO, __VA_ARGS__)
 
 #define MTHRD_TH_COUNT (MTHRD_AUX + 1)
 
@@ -178,7 +174,6 @@ int mthrd_init(int mode) {
 #ifdef PLAT_OS_WIN
          unsigned threadID;
          m->thid = (HANDLE)_beginthreadex(NULL,0,&_mthrd_wrapper_func,(void*)m,0,&threadID);
-         _log("create win32 thread %p\n", m->thid);
 #elif defined(PLAT_OS_MAC) || defined(PLAT_OS_IOS)
          if (gm->mode == MTHRD_MODE_POWER_LOW) {
             dispatch_queue_t _thread[MTHRD_TH_COUNT] = {
@@ -188,21 +183,17 @@ int mthrd_init(int mode) {
             m->last_ms = mtime_current();
             dispatch_time_t after = dispatch_time(DISPATCH_TIME_NOW, 0.001*NSEC_PER_SEC);
             dispatch_after(after, _thread[i] , ^{ _mthrd_wrapper_func(m); });
-            _log("create ios/osx dispatcher %p\n", (_m_queid[i] = _thread[i]));
             continue;
          } else {
             pthread_create(&m->thid, NULL, _mthrd_wrapper_func, m);
-            _log("create pthread %p\n", m->thid);
          }
 #else
          pthread_create(&m->thid, NULL, _mthrd_wrapper_func, m);
-         _log("create pthread %p\n", &m->thid);
 #endif  /* WIN */
       }
       gm->init = 1;
       return 1;
    }
-   _err("fail to init\n");
    assert(0);
    return 0;
 }

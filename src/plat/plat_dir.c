@@ -21,16 +21,12 @@
 #include <dirent.h>
 #endif
 #include "m_mem.h"
-#include "m_debug.h"
 #include "plat_dir.h"
 #include "plat_charset.h"
 #include <assert.h>
 #include "mfoundation_import.h"
 
 #if M_FOUNDATION_IMPORT_PLAT_DIR
-
-#define _err(...) _mlog("dir", D_ERROR, __VA_ARGS__)
-#define _log(...) _mlog("dir", D_INFO, __VA_ARGS__)
 
 static mdir_entry_t*
 _create_dir_entry(int namelen) {
@@ -111,7 +107,6 @@ struct s_mdir {
 mdir_t*
 mdir_open(const char *dir_path) {
    if (dir_path == NULL) {
-      _err("Param error !\n");
       return NULL;
    }
 
@@ -126,7 +121,6 @@ mdir_open(const char *dir_path) {
       strcat(fname, "*.*");
       d->fh = _findfirst(fname, &d->fdata);
       if (d->fh < 0) { break; }
-      /* _log("fh = %d\n", d->fh); */
 #else
       if ((d->dirp=opendir(dir_path)) == NULL) { break; }
 #endif
@@ -139,8 +133,9 @@ mdir_open(const char *dir_path) {
       return d;
    } while (0);
 
-   if (d) { mm_free(d); }
-   _err("fail to open dir %s\n", dir_path);
+   if (d) {
+      mm_free(d);
+   }
    return NULL;
 }
 
@@ -174,7 +169,6 @@ mdir_list(mdir_t *d, int count) {
          strncpy(e->name, fname, namlen);
          e->name[namlen] = 0;
          lst_pushl(lst, e);
-         /* _log("e[%s], %d\n", e->name, e->namlen); */
       }
    }
 #else
@@ -196,7 +190,6 @@ mdir_list(mdir_t *d, int count) {
             memcpy(e->name, dp->d_name, namlen);
             e->name[namlen] = 0;
             lst_pushl(lst, e);
-            //_log("add entry %s\n", dp->d_name);
          }
       }
    }
@@ -246,35 +239,5 @@ char* mdir_path_slash(char *path) {
 #endif
    return path;
 }
-
-#ifdef MDIR_TEST
-int main(int argc, char *argv[]) {
-
-   if (argc < 2) {
-      printf("%s DIR_PATH\n", argv[0]);
-      return 0;
-   }
-
-   _set_debug_level(D_VERBOSE);
-
-   mdir_t *d = mdir_open( argv[1] );
-#if 0
-   lst_t *lst = mdir_list(d, 15);
-   lst_foreach(n, lst) {
-      mdir_entry_t *d = lst_iter_data(n);
-      printf("dir entry [%d.%uK: %s]\n", d->ftype, d->fsize>>10, d->name);
-   }
-   printf("----------\n");
-   lst = mdir_list(d, 5);
-   lst_foreach(v, lst) {
-      mdir_entry_t *d = lst_iter_data(v);
-      printf("dir entry [%d.%uK: %s]\n", d->ftype, d->fsize>>10, d->name);
-   }
-#endif
-   mm_report(0);
-   mdir_close(d);
-   return 0;
-}
-#endif
 
 #endif // M_FOUNDATION_IMPORT_PLAT_DIR
