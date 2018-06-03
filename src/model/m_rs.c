@@ -50,7 +50,7 @@ _generate_rs(rs_t *rs) {
    int i, k;
    int n = rs->t2;
    gf_t *gf = rs->gf;
-   gu *poly_arr = mm_malloc(n * (n+1));
+   gu *poly_arr = (gu*)mm_malloc(n * (n+1) * sizeof(gu));
     
 #define _poly(x, y) poly_arr[(x)*(n+1) + (y)]
 
@@ -615,12 +615,12 @@ rs_init(unsigned data_len, unsigned parity_bytes) {
        (parity_bytes % 2 == 0) &&
        (parity_bytes <= (2*kTT)))
    {
-      rs_t *rs = mm_malloc(sizeof(*rs));
+      rs_t *rs = (rs_t*)mm_malloc(sizeof(*rs));
       rs->gf = gf_init();
       rs->t2 = parity_bytes;
       rs->k = data_len;
       rs->n = rs->k + parity_bytes;
-      rs->g_arr = mm_malloc(rs->t2 + 1);
+      rs->g_arr = (gu*)mm_malloc(rs->t2 + 1);
       _generate_rs(rs);
       return rs;
    }

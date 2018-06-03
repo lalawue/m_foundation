@@ -194,10 +194,10 @@ gf_poly(gf_t *gf, gu p[], int n, gu a) {
 
 gf_t*
 gf_init(void) {
-   gf_t *gf = mm_malloc(sizeof(*gf));
+   gf_t *gf = (gf_t*)mm_malloc(sizeof(struct s_gf));
    if (gf) {
-      gf->alpha_to = mm_malloc((kNN + 1) * sizeof(gu));
-      gf->index_of = mm_malloc((kNN + 1) * sizeof(gu));
+      gf->alpha_to = (gu*)mm_malloc((kNN + 1) * sizeof(gu));
+      gf->index_of = (gu*)mm_malloc((kNN + 1) * sizeof(gu));
       _gen_256(gf);
    }
    return gf;
