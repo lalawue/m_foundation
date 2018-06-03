@@ -11,8 +11,8 @@ extern "C" {
 typedef struct s_rs rs_t;
 
 /* max length RS_MAX_MSG_LEN, correct error bytes <= parity_bytes/2
- * @param data_len:
- * @param parity_bytes: can be 2, 4, ... 32
+ * @param data_len: data bytes
+ * @param parity_bytes: parity bytes, more than 2
  */
 rs_t* rs_init(unsigned data_len, unsigned parity_bytes);
 void rs_fini(rs_t *rs);

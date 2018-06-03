@@ -36,11 +36,11 @@ _test_codec(void) {
    unsigned char c[32];   
 
    const int k = 223;           /* msg info length */
-   const int t = 16;            /* max error bytes */
-   const int n = k + t*2;       /* total msg length */
+   const int t2 = 32;           /* max error bytes */
+   const int n = k + t2;        /* total msg length */
    int i, j;
     
-   rs_t *rs = rs_init(k, 2*t);
+   rs_t *rs = rs_init(k, t2);
    if ( !rs ) {
       abort();
    }
@@ -55,7 +55,7 @@ _test_codec(void) {
         
       if ( rs_encode(rs, m, c) ) {
             
-         _add_errors(m, c, (k + 2*t), t);
+         _add_errors(m, c, (k + t2), t2>>1);
             
          int ret = rs_decode(rs, m, c);
             
@@ -64,7 +64,7 @@ _test_codec(void) {
             errors += org[j] != m[j];
          }
 
-         printf("RS(%d, %d, %d), ret=%d, err=%d ", n, k, t, ret, errors);
+         printf("RS(%d, %d, %d), ret=%d, err=%d ", n, k, t2, ret, errors);
             
          if (!ret && errors>0) {
             printf(" %d errors undetected\n", errors);

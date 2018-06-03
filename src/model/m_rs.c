@@ -21,9 +21,9 @@
 // rs constrol structure
 struct s_rs {
    gf_t *gf;
-   gu t;               // parity byte shift
-   gu k;               // sysmbols to be encoded
-   gu n;               // k + 2*t;
+   gu t2;                       // parity byte
+   gu k;                        // sysmbols to be encoded
+   gu n;                        // k + 2*t;
    gu *g_arr;
    unsigned char uncorrectable;
 };
@@ -48,7 +48,7 @@ struct s_rs {
 void
 _generate_rs(rs_t *rs) {
    int i, k;
-   int n = 2 * rs->t;
+   int n = rs->t2;
    gf_t *gf = rs->gf;
    gu *poly_arr = mm_malloc(n * (n+1));
     
@@ -173,12 +173,11 @@ rs_encode(rs_t *rs, unsigned char *data, unsigned char *parity) {
    gu *m = (gu*)data;
    gu *c = (gu*)parity;
     
-   int n = rs->n;
-   int b = rs->n - rs->k;
+   const int n = rs->n;
+   const int b = rs->n - rs->k;
    gu *g = rs->g_arr;
    gf_t *gf = rs->gf;
     
-   int i, j, p;
    gu reg[b];
 
    /* initialize register to 0 */
@@ -190,13 +189,13 @@ rs_encode(rs_t *rs, unsigned char *data, unsigned char *parity) {
     * (i.e., the elements are arranged according to their
     * power. That's why c[n-1] comes out first.
     */
-   p = n-1;
+   int p = n-1;
 
    /*
     * and now feed the data symbols one by one 
     * (data is fed from highest power (m[k-1]) to lowest (m[0])
     */
-   for (i=rs->k-1;i>=0; i--) {
+   for (int i=rs->k-1; i>=0; i--) {
 
       gu feedback = gf_add(gf, reg[b-1], m[i]);
 
@@ -207,7 +206,7 @@ rs_encode(rs_t *rs, unsigned char *data, unsigned char *parity) {
       //c[p--] = m[i];
       p--;
 
-      for(j=b-1; j>0; j--) {
+      for (int j=b-1; j>0; j--) {
          reg[j] = gf_mul(gf, feedback, g[j]);
          reg[j] = gf_add(gf, reg[j], reg[j-1]);
       }
@@ -220,7 +219,7 @@ rs_encode(rs_t *rs, unsigned char *data, unsigned char *parity) {
    }
 
    /* finished with symbols. insert 0's and take out the reminder */
-   for(i=b-1; i>=0 ;i--) {
+   for(int i=b-1; i>=0 ;i--) {
       gu feedback = reg[i];
       c[p--] = feedback;
    }
@@ -275,22 +274,24 @@ rs_encode(rs_t *rs, unsigned char *data, unsigned char *parity) {
 
 static void
 _rs_syn(rs_t *rs, gu *m, gu *c, gu *s) {
-   int i, j;
-   int n = rs->n;
-   int t = rs->t;
-   int t2 = t << 1;
+
+   const int n = rs->n;
+   const int t2 = rs->t2;
+
    gf_t *gf = rs->gf;
-   gu *alpha_to = gf_alpha_to_array(gf);
+   const gu *alpha_to = gf_alpha_to_array(gf);
+
+   int i, j;
 
    /* evaluate 2t syndroms s_i = c(alpha^i), i=0..2T-1 */
-   for(i=0; i<2*t; i++) {
+   for ( i=0; i<t2; i++) {
       gu multiply_by = alpha_to[i];
       s[i] = 0;
-      for (j=n-1; j>=t2; j--) {
+      for (int j=n-1; j>=t2; j--) {
          gu feedback = gf_mul(gf, s[i], multiply_by);
          s[i] = gf_add(gf, m[j-t2], feedback);
       }
-      for (j=t2-1; j>=0; j--) {
+      for ( j=t2-1; j>=0; j--) {
          gu feedback = gf_mul(gf, s[i], multiply_by);
          s[i] = gf_add(gf, c[j], feedback);
       }
@@ -341,7 +342,7 @@ _rs_syn(rs_t *rs, gu *m, gu *c, gu *s) {
                                                 V
 	                                            delta[r]
 
-		Initialization:												
+		Initialization:
 		PE1_i = s_i, i=0..2t-1
 
 		Output:
@@ -404,19 +405,19 @@ _rs_syn(rs_t *rs, gu *m, gu *c, gu *s) {
  */
 
 static void
-_rs_kes(gf_t *gf, int n, int t, gu *s, gu *l, gu *w) {
+_rs_kes(gf_t *gf, int n, int t2, gu *s, gu *l, gu *w) {
    int i;
 
    /* r is the iteration count of the irBM algorithm */	
    int	r;
 
    /* PE1[i][r] state variables of PE1_i at iteration r */
-   gu dhat[2*kTT][2*t+1];
-   gu th  [2*kTT][2*t+1];
+   gu dhat[2*kTT][t2+1];
+   gu th  [2*kTT][t2+1];
 
    /* PE0[i][r] state variables of PE0_i at iteration r */
-   gu B     [kTT+1][2*t+1];
-   gu lambda[kTT+1][2*t+1];
+   gu B     [kTT+1][t2+1];
+   gu lambda[kTT+1][t2+1];
 
    /* control block signals (not all are registers!) */
    int kcnt [2*kTT+1];
@@ -430,13 +431,13 @@ _rs_kes(gf_t *gf, int n, int t, gu *s, gu *l, gu *w) {
    r = 0; 
 
    /* initialize PE1 array (DC block) */
-   for(i=0; i<2*kTT; i++) {
+   for (i=0; i<2*kTT; i++) {
       dhat[i][r] = s[i];
       th[i][r]   = s[i];
    }
 
    /* initialize PE0 array (ELU block */
-   for(i=kTT; i>0; i--)  {
+   for (i=kTT; i>0; i--)  {
       B[i][r]      = 0;
       lambda[i][r] = 0;
    }
@@ -448,7 +449,7 @@ _rs_kes(gf_t *gf, int n, int t, gu *s, gu *l, gu *w) {
    kcnt[r] = 0;
    gamma[r] = 1;
 
-   for(; r<2*t; r++) {
+   for (; r<t2; r++) {
 
       /* control block */
 
@@ -469,7 +470,7 @@ _rs_kes(gf_t *gf, int n, int t, gu *s, gu *l, gu *w) {
 
       /* ELU block (PE0 processor) */
 
-      for(i=0; i<=kTT; i++) {
+      for (i=0; i<=kTT; i++) {
          gu m1, m2, prev;
 
          prev = (i > 0) ? B[i-1][r] : 0;
@@ -488,7 +489,7 @@ _rs_kes(gf_t *gf, int n, int t, gu *s, gu *l, gu *w) {
       /* DC block (PE1 processor) */
 		
 
-      for(i=0; i<2*kTT; i++) {
+      for (i=0; i<2*kTT; i++) {
          gu m1, m2, prev;
 
          prev = (i < 2*kTT-1) ? dhat[i+1][r] : 0;
@@ -505,13 +506,12 @@ _rs_kes(gf_t *gf, int n, int t, gu *s, gu *l, gu *w) {
             th[i][r+1] = th[i][r];
          }
       }	
-
    }
 
-   for(i=0; i<=kTT; i++) {
+   for ( i=0; i<=kTT; i++) {
       l[i] = lambda[i][r];
    }
-   for(i=0; i<kTT; i++) {
+   for ( i=0; i<kTT; i++) {
       w[i] = dhat[i][r];
    }
 }
@@ -528,9 +528,8 @@ rs_decode(rs_t *rs, unsigned char *data, unsigned char *parity) {
     
    gf_t *gf = rs->gf;
    int i, roots, deg_lambda;
-   int n = rs->n;
-   int t = rs->t;
-   int t2 = t << 1;
+   const int n = rs->n;
+   const int t2 = rs->t2;
 
    gu syndrom[2*kTT];
    //gu syndrom_check[2*kTT];
@@ -543,7 +542,7 @@ rs_decode(rs_t *rs, unsigned char *data, unsigned char *parity) {
    _rs_syn(rs, m, c, syndrom);
 	
    // key equation solver
-   _rs_kes(gf, n, t, syndrom, lambda, omega);
+   _rs_kes(gf, n, t2, syndrom, lambda, omega);
 
    // chien search
 
@@ -552,7 +551,7 @@ rs_decode(rs_t *rs, unsigned char *data, unsigned char *parity) {
    // computed with the real t of course.
 	
    deg_lambda = 0;
-   for(i=0; i<kTT+1; i++) {
+   for (i=0; i<kTT+1; i++) {
       lambda_odd[i] = (i%2 == 1) ? lambda[i] : 0;
       if (lambda[i] != 0) {
          deg_lambda = i;
@@ -574,7 +573,7 @@ rs_decode(rs_t *rs, unsigned char *data, unsigned char *parity) {
     */
    roots = 0;
    gu *alpha_to = gf_alpha_to_array(gf);
-   for(i=n-1; i>=0; i--) {
+   for ( i=n-1; i>=0; i--) {
       gu root = alpha_to[(RS_MAX_MSG_LEN - i) % (RS_MAX_MSG_LEN)];
       gu result;
       result = gf_poly(gf, lambda, kTT+1, root);
@@ -618,10 +617,10 @@ rs_init(unsigned data_len, unsigned parity_bytes) {
    {
       rs_t *rs = mm_malloc(sizeof(*rs));
       rs->gf = gf_init();
-      rs->t = parity_bytes >> 1;
+      rs->t2 = parity_bytes;
       rs->k = data_len;
       rs->n = rs->k + parity_bytes;
-      rs->g_arr = mm_malloc(2 * rs->t + 1);
+      rs->g_arr = mm_malloc(rs->t2 + 1);
       _generate_rs(rs);
       return rs;
    }
