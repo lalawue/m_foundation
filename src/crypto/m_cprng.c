@@ -7,6 +7,7 @@
 
 #include "plat_os.h"
 #include "m_cprng.h"
+#include "mfoundation_import.h"
 
 #if M_FOUNDATION_IMPORT_CRYPTO_CPRNG
 
