@@ -30,8 +30,8 @@ test: $(APP_SRCS)
 	mkdir -p build
 	$(CC) $(DEBUG) $(CFLAGS) $(INCS) -o build/test_timer.out $^ $(TLIBS) -DM_FOUNDATION_TEST_TIMER
 	$(CC) $(DEBUG) $(CFLAGS) $(INCS) -o build/test_skiplist.out $^ $(TLIBS) -DM_FOUNDATION_TEST_SKIPLIST
-	$(CC) $(DEBUG) $(CFLAGS) $(INCS) -o build/test_rs.out $^ $(TLIBS) -DM_FOUNDATION_TEST_RS
 	$(CC) $(DEBUG) $(CFLAGS) $(INCS) -o build/test_debug.out $^ $(TLIBS) -DM_FOUNDATION_TEST_DEBUG
+	$(CC) $(DEBUG) $(CFLAGS) $(INCS) -o build/test_sha256.out $^ $(TLIBS) -DM_FOUNDATION_TEST_SHA256
 
 clean:
 	rm -rf build
