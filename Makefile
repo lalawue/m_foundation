@@ -32,6 +32,7 @@ test: $(APP_SRCS)
 	$(CC) $(DEBUG) $(CFLAGS) $(INCS) -o build/test_skiplist.out $^ $(TLIBS) -DM_FOUNDATION_TEST_SKIPLIST
 	$(CC) $(DEBUG) $(CFLAGS) $(INCS) -o build/test_debug.out $^ $(TLIBS) -DM_FOUNDATION_TEST_DEBUG
 	$(CC) $(DEBUG) $(CFLAGS) $(INCS) -o build/test_sha256.out $^ $(TLIBS) -DM_FOUNDATION_TEST_SHA256
+	$(CC) $(DEBUG) $(CFLAGS) $(INCS) -o build/test_chacha20.out $^ $(TLIBS) -DM_FOUNDATION_TEST_CHACHA20
 
 clean:
 	rm -rf build
