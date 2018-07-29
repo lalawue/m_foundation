@@ -37,7 +37,7 @@ cprng_random(unsigned char *buf, int buf_len) {
    for (int i=0; i<2; i++) {
       HCRYPTPROV hCryptProv = NULL;
       if ( CryptAcquireContext(&hCryptProv, NULL, NULL, PROV_RSA_FULL, 0) ) {
-         if ( CryptGenRandom(hCryptProv, (DWORD)bufLen, (BYTE*)buf) ) {
+         if ( CryptGenRandom(hCryptProv, (DWORD)buf_len, (BYTE*)buf) ) {
             ret = 1;
          }
          CryptReleaseContext(hCryptProv, 0);
