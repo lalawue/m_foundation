@@ -13,6 +13,7 @@
 
 #ifdef PLAT_OS_WIN
 
+#include <windows.h>
 #include <wincrypt.h>
 #pragma comment(lib, "Advapi32.lib")
 

@@ -10,6 +10,8 @@
 #ifndef _CHACHA20_H
 #define _CHACHA20_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
