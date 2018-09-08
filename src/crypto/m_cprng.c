@@ -47,7 +47,7 @@ cprng_random(unsigned char *buf, int buf_len) {
    
 #else
    
-   FILE *fp = fopen("/dev/random", "r");
+   FILE *fp = fopen("/dev/urandom", "rb");
    if ( fp ) {
       ret = fread(buf, buf_len, 1, fp);
       fclose(fp);
