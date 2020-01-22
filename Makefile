@@ -1,7 +1,19 @@
 
-CC=gcc
-CFLAGS= -Wall -std=c99 -Wdeprecated-declarations -DM_FOUNDATION_IMPORT_ALL
+UNAME_S := $(shell uname -s)
 
+ifeq ($(UNAME_S), FreeBSD)
+	CC=cc
+else
+	CC=gcc
+endif
+
+ifeq ($(UNAME_S), Darwin)
+	LIBNAME=libmfoundation.dylib
+else
+	LIBNAME=mfoundation.so
+endif
+
+CFLAGS= -Wall -std=c99 -Wdeprecated-declarations -DM_FOUNDATION_IMPORT_ALL
 
 DEBUG= -g
 RELEASE= -O2
@@ -20,11 +32,11 @@ all: debug
 
 debug: $(LIB_SRCS)
 	mkdir -p build
-	$(CC) $(DEBUG) $(CFLAGS) $(INCS) -o build/libmfoundation.dylib $^ $(LIBS) -shared -fPIC
+	$(CC) $(DEBUG) $(CFLAGS) $(INCS) -o build/$(LIBNAME) $^ $(LIBS) -shared -fPIC
 
 release: $(LIB_SRCS)
 	mkdir -p build
-	$(CC) $(RELEASE) $(CFLAGS) $(INCS) -o build/libmfoundation.dylib $^ $(LIBS) -shared -fPIC
+	$(CC) $(RELEASE) $(CFLAGS) $(INCS) -o build/$(LIBNAME) $^ $(LIBS) -shared -fPIC
 
 test: $(APP_SRCS)
 	mkdir -p build
