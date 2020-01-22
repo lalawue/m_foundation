@@ -10,7 +10,7 @@ endif
 ifeq ($(UNAME_S), Darwin)
 	LIBNAME=libmfoundation.dylib
 else
-	LIBNAME=mfoundation.so
+	LIBNAME=libmfoundation.so
 endif
 
 CFLAGS= -Wall -std=c99 -Wdeprecated-declarations -DM_FOUNDATION_IMPORT_ALL
