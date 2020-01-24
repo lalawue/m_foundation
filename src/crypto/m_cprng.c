@@ -35,7 +35,7 @@ cprng_random(unsigned char *buf, int buf_len) {
 #ifdef PLAT_OS_WIN
    
    for (int i=0; i<2; i++) {
-      HCRYPTPROV hCryptProv = NULL;
+      HCRYPTPROV hCryptProv = 0;
       if ( CryptAcquireContext(&hCryptProv, NULL, NULL, PROV_RSA_FULL, 0) ) {
          if ( CryptGenRandom(hCryptProv, (DWORD)buf_len, (BYTE*)buf) ) {
             ret = 1;

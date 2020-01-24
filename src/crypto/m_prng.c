@@ -11,6 +11,7 @@
 #include "plat_os.h"
 #include "m_prng.h"
 #include <stdio.h>
+#include <stdint.h>
 #if defined(PLAT_OS_WIN)
 #include <windows.h>
 #include <windef.h>
@@ -62,7 +63,7 @@ prng_init(prng_t *rng) {
 
 
 static inline uint64_t
-_rotl(const uint64_t x, int k) {
+__rotl(const uint64_t x, int k) {
    return (x << k) | (x >> (64 - k));
 }
 
@@ -75,8 +76,8 @@ prng_next(prng_t *rng) {
       const uint64_t result = s0 + s1;
 
       s1 ^= s0;
-      rng->seed[0] = _rotl(s0, 55) ^ s1 ^ (s1 << 14); // a, b
-      rng->seed[1] = _rotl(s1, 36); // c
+      rng->seed[0] = __rotl(s0, 55) ^ s1 ^ (s1 << 14); // a, b
+      rng->seed[1] = __rotl(s1, 36); // c
 
       return result;
    }

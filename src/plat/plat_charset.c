@@ -18,8 +18,8 @@ int
 charset_to_prog(
    const char *from, char *tmp, int tmplen, char *to, int tolen) {
 #ifdef PLAT_OS_WIN
-   int len = MultiByteToWideChar(CP_OEMCP, NULL, (LPCCH)from, -1, (LPWSTR)tmp, tmplen);
-   return WideCharToMultiByte(CP_UTF8, NULL, (LPCWCH)tmp, len, to, tolen, NULL, NULL);
+   int len = MultiByteToWideChar(CP_OEMCP, 0, (LPCCH)from, -1, (LPWSTR)tmp, tmplen);
+   return WideCharToMultiByte(CP_UTF8, 0, (LPCWCH)tmp, len, to, tolen, NULL, NULL);
 #else
    return 0;
 #endif
@@ -30,8 +30,8 @@ int
 charset_to_sysm(
    const char *from, char *tmp, int tmplen, char *to, int tolen) {
 #ifdef PLAT_OS_WIN
-   int len = MultiByteToWideChar(CP_UTF8, NULL, (LPCCH)from, -1, (LPWSTR)tmp, tmplen);
-   return WideCharToMultiByte(CP_OEMCP, NULL, (LPCWCH)tmp, len, to, tolen, NULL, NULL);
+   int len = MultiByteToWideChar(CP_UTF8, 0, (LPCCH)from, -1, (LPWSTR)tmp, tmplen);
+   return WideCharToMultiByte(CP_OEMCP, 0, (LPCWCH)tmp, len, to, tolen, NULL, NULL);
 #else
    return 0;
 #endif

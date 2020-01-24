@@ -144,16 +144,18 @@ _mthrd_wrapper_func(THRD_PARAM_TYPE param)
 
 #ifdef PLAT_OS_WIN
    _endthreadex(0);
+   return 0;
 #elif defined(PLAT_OS_IOS) || defined(PLAT_OS_MAC)
    if (gm->mode == MTHRD_MODE_POWER_LOW) {
       return NULL;
    } else {
       pthread_exit(NULL);
    }
+   return NULL;
 #else
    pthread_exit(NULL);
-#endif
    return NULL;
+#endif
 }
 
 int mthrd_init(int mode) {
